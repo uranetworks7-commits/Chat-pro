@@ -1,18 +1,41 @@
+
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useUser } from '@/context/UserContext';
+import { db } from '@/lib/firebase';
+import { ref, onValue, off } from 'firebase/database';
 import { User, Bell, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSheet from './ProfileSheet';
 import FriendsSheet from './FriendsSheet';
 
 export default function Header() {
+  const { user } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
+  const [hasFriendRequest, setHasFriendRequest] = useState(false);
 
-  // TODO: Replace these with real data listeners
-  const hasFriendRequest = true; 
+  // TODO: Replace with real data listener for new messages
   const hasNewFriendMessage = false;
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const requestsRef = ref(db, `users/${user.username}/friendRequests`);
+    const listener = onValue(requestsRef, (snapshot) => {
+        const requestsData = snapshot.val();
+        if (requestsData) {
+            const hasPending = Object.values(requestsData).some(status => status === 'pending');
+            setHasFriendRequest(hasPending);
+        } else {
+            setHasFriendRequest(false);
+        }
+    });
+
+    return () => off(requestsRef, 'value', listener);
+
+  }, [user]);
 
   return (
     <>

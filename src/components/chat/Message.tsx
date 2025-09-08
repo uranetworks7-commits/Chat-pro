@@ -1,9 +1,11 @@
+
 "use client";
 
 import { memo } from 'react';
 import { format } from 'date-fns';
 import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
+import Image from 'next/image';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -79,7 +81,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
 
   return (
-    <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors', isSender ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
       <div className="flex flex-col items-center w-16 flex-shrink-0">
         <Avatar className="h-10 w-10 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
@@ -103,7 +105,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
-            {message.imageUrl && <img src={message.imageUrl} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" />}
+            {message.imageUrl && <Image src={message.imageUrl} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={300} height={200} />}
         </div>
         <span className="text-xs text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
