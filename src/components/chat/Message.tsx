@@ -33,9 +33,9 @@ const roleStyles = {
 
 const messageBgStyles = {
     user: 'bg-secondary',
-    moderator: 'bg-blue-900/30 border border-blue-600/50',
-    developer: 'bg-green-900/30 border border-green-600/50',
-    system: 'bg-purple-900/30 border border-purple-600/50',
+    moderator: 'bg-blue-800/80 border border-blue-600',
+    developer: 'bg-green-800/80 border border-green-600',
+    system: 'bg-purple-800/80 border border-purple-600',
 }
 
 function parseAndRenderMessage(text: string) {
@@ -98,7 +98,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock }: MessageProps
 
       <div className={cn('flex flex-col max-w-[70%]', isSender ? 'items-end' : 'items-start')}>
         <div className={cn(
-            'rounded-xl p-3 relative', 
+            'rounded-xl p-3 relative shadow-md', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
