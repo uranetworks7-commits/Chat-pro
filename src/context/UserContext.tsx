@@ -3,7 +3,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import type { UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, off, set } from 'firebase/database';
 
 interface UserContextType {
   user: UserData | null;
@@ -18,27 +18,36 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem('publicchat_user');
-      if (storedUser) {
-        const parsedUser: UserData = JSON.parse(storedUser);
-        
-        const userRef = ref(db, `users/${parsedUser.username}`);
-        onValue(userRef, (snapshot) => {
+    let userRef: any;
+    const loadUser = () => {
+      try {
+        const storedUser = localStorage.getItem('publicchat_user');
+        if (storedUser) {
+          const parsedUser: UserData = JSON.parse(storedUser);
+          setUserState(parsedUser);
+
+          userRef = ref(db, `users/${parsedUser.username}`);
+          onValue(userRef, (snapshot) => {
             const updatedUser = snapshot.val();
             if (updatedUser) {
-                setUserState(updatedUser);
-                localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
+              setUserState(updatedUser);
+              localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
             }
-        });
-        
-        setUserState(parsedUser);
+          });
+        }
+      } catch (error) {
+        console.error("Failed to parse user from localStorage", error);
+        localStorage.removeItem('publicchat_user');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('publicchat_user');
-    } finally {
-      setLoading(false);
+    };
+    loadUser();
+
+    return () => {
+        if (userRef) {
+            off(userRef);
+        }
     }
   }, []);
 
@@ -46,6 +55,8 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUserState(userData);
     if (userData) {
       localStorage.setItem('publicchat_user', JSON.stringify(userData));
+      const userRef = ref(db, `users/${userData.username}`);
+      set(userRef, userData);
     } else {
       localStorage.removeItem('publicchat_user');
     }
