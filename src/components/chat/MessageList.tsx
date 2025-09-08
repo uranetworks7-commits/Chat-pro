@@ -27,6 +27,8 @@ import {
 import { MessageCircle } from 'lucide-react';
 import MessageInput from './MessageInput';
 import TypingIndicator from './TypingIndicator';
+import { isToday, isYesterday, format, isSameDay } from 'date-fns';
+import DateSeparator from './DateSeparator';
 
 interface MessageListProps {
   chatId?: string; // For private chats
@@ -46,6 +48,13 @@ function WelcomeMessage({ otherUserName }: { otherUserName?: string }) {
         </div>
     );
 }
+
+const formatDateSeparator = (date: Date) => {
+    if (isToday(date)) return 'Today';
+    if (isYesterday(date)) return 'Yesterday';
+    return format(date, 'MMMM d, yyyy');
+}
+
 
 export default function MessageList({ chatId, isPrivateChat, otherUserName }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -119,13 +128,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
   useEffect(() => {
       if (messageToWarn && user) {
-          toast({
-              title: "Warning: Inappropriate Language",
-              description: "Further violations may result in a ban.",
-              variant: "destructive",
-          });
           const userToBlock = { ...user, username: messageToWarn.senderId, customName: messageToWarn.senderName };
-
           const timeoutId = setTimeout(() => {
               blockUser(userToBlock, `URA Firing Squad Blocked ${userToBlock.customName}.`);
               setPendingBlocks(prev => {
@@ -293,28 +296,34 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="p-2 space-y-1">
         <AnimatePresence>
-          {messages.map((message) => (
-            <motion.div
-                key={message.id}
-                layout
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, transition: { duration: 0.2 } }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="group"
-            >
-                <MessageComponent
-                    message={message}
-                    onReport={handleReport}
-                    onDelete={handleDeleteRequest}
-                    onBlock={handleBlock}
-                    onUnblock={handleUnblock}
-                    onSendFriendRequest={handleSendFriendRequest}
-                    onReply={handleReply}
-                    isPrivateChat={isPrivateChat}
-                />
-            </motion.div>
-          ))}
+          {messages.map((message, index) => {
+            const showDateSeparator = index === 0 || !isSameDay(new Date(messages[index-1].timestamp), new Date(message.timestamp));
+            
+            return (
+                <div key={message.id}>
+                    {showDateSeparator && <DateSeparator date={formatDateSeparator(new Date(message.timestamp))} />}
+                    <motion.div
+                        layout
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, transition: { duration: 0.2 } }}
+                        transition={{ duration: 0.3, ease: "easeOut" }}
+                        className="group"
+                    >
+                        <MessageComponent
+                            message={message}
+                            onReport={handleReport}
+                            onDelete={handleDeleteRequest}
+                            onBlock={handleBlock}
+                            onUnblock={handleUnblock}
+                            onSendFriendRequest={handleSendFriendRequest}
+                            onReply={handleReply}
+                            isPrivateChat={isPrivateChat}
+                        />
+                    </motion.div>
+                </div>
+            )
+          })}
           </AnimatePresence>
         </div>
       </ScrollArea>
