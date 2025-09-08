@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft, Clipboard } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -222,16 +222,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     setShowReactionPopup(false);
   }
 
-  const handleCopy = async () => {
-      if (!message.text) return;
-      try {
-        await navigator.clipboard.writeText(message.text);
-        toast({ title: 'Copied to clipboard!' });
-      } catch (err) {
-        toast({ title: 'Failed to copy', variant: 'destructive' });
-      }
-  }
-
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
   const chatId = isPrivateChat ? message.id.split('_chat_')[0] : 'public';
 
@@ -251,12 +241,11 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const MessageOptions = () => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-50 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-50 hover:opacity-100 transition-opacity">
                 <MoreHorizontal className="h-4 w-4" />
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={isSender ? "end" : "start"}>
-        {message.text && <DropdownMenuItem onClick={handleCopy}><Clipboard className="mr-2 h-4 w-4" /><span>Copy Text</span></DropdownMenuItem>}
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
         {!isSender && <DropdownMenuItem onClick={() => onReply(message)}><CornerUpLeft className="mr-2 h-4 w-4" /><span>Reply</span></DropdownMenuItem>}
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
@@ -287,7 +276,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   return (
     <>
     <Confetti fire={fireConfetti} />
-    <div className={cn('flex items-start gap-3 p-2 my-1 group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex items-start gap-3 p-2 my-1', isSender ? 'flex-row-reverse' : 'flex-row')}>
       <Avatar className="h-8 w-8 border-2 border-muted">
         <AvatarImage src={message.senderProfileUrl} />
         <AvatarFallback>
@@ -296,11 +285,14 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
       </Avatar>
 
       <div className={cn("flex flex-col w-fit max-w-md", isSender ? 'items-end' : 'items-start')}>
-        <div className="flex items-center gap-1.5">
+        <div className={cn("flex items-center gap-1.5", isSender ? 'flex-row-reverse' : 'flex-row')}>
             <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
                 {message.senderName}
             </span>
             {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+             <div className="self-start">
+                <MessageOptions />
+            </div>
         </div>
         
         <Popover open={showReactionPopup} onOpenChange={setShowReactionPopup}>
@@ -365,9 +357,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         )}
       </div>
 
-      <div className="self-start pt-6 opacity-0 group-hover:opacity-100 transition-opacity">
-        <MessageOptions />
-      </div>
     </div>
     </>
   );
