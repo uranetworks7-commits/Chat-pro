@@ -160,19 +160,17 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-        {!isPrivateChat && (
-             <div className="flex items-center gap-1 mt-1">
-                <span className={cn('text-[9px] font-medium truncate', roleStyles[senderRole])}>
-                    {message.senderName}
-                </span>
-                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
-            </div>
-        )}
+        <div className="flex items-center gap-1 mt-1">
+            <span className={cn('text-[9px] font-medium truncate', roleStyles[senderRole])}>
+                {message.senderName}
+            </span>
+            {senderRole !== 'user' && !isPrivateChat && <RoleIcon role={senderRole} className="h-2 w-2" />}
+        </div>
       </div>
 
       <div className={cn('flex flex-col max-w-[75%]', isSender ? 'items-end' : 'items-start')}>
         <div className={cn(
-            'rounded-lg p-1.5 relative shadow-md', 
+            'rounded-lg p-2 relative shadow-md', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             {!isSender && isPrivateChat && (
@@ -183,7 +181,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
                 </div>
             )}
-            <div className="text-[11px]">{message.text && parseAndRenderMessage(message.text)}</div>
+            <div className="text-xs">{message.text && parseAndRenderMessage(message.text)}</div>
             {hasMedia && <MediaContent url={message.imageUrl!} />}
         </div>
         <span className="text-[8px] text-muted-foreground mt-1 px-1">
