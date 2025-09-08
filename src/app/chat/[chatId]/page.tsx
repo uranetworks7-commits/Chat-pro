@@ -26,21 +26,24 @@ function ChatHeader({ otherUser }: ChatHeaderProps) {
   return (
     <header className="flex items-center justify-between p-4 border-b bg-card/80">
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => router.push('/')}>
+        <Button variant="ghost" onClick={() => router.push('/')} className="p-2 h-auto">
           <ArrowLeft className="h-6 w-6" />
+          <span className="ml-2 font-semibold">Private Message</span>
         </Button>
+      </div>
+      <div className="flex items-center gap-3">
         {otherUser ? (
           <>
+            <h1 className="text-xl font-bold text-right">{otherUser.customName}</h1>
             <Avatar>
               <AvatarImage src={otherUser.profileImageUrl} />
               <AvatarFallback>{otherUser.customName.charAt(0)}</AvatarFallback>
             </Avatar>
-            <h1 className="text-xl font-bold">{otherUser.customName}</h1>
           </>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
             <div className="h-6 w-32 bg-muted rounded-md animate-pulse" />
+            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
           </div>
         )}
       </div>
@@ -64,19 +67,6 @@ export default function PrivateChatPage() {
 
     const otherUserRef = ref(db, `users/${otherUserId}`);
     
-    const fetchOtherUser = async () => {
-        try {
-            const snapshot = await get(otherUserRef);
-            if (snapshot.exists()) {
-                const userData = snapshot.val();
-                // Ensure the username from the key is set in the object
-                setOtherUser({ ...userData, username: otherUserId });
-            }
-        } catch (error) {
-            console.error("Failed to fetch other user:", error);
-        }
-    }
-
     const listener = onValue(otherUserRef, (snapshot) => {
       if (snapshot.exists()) {
         const userData = snapshot.val();
@@ -84,24 +74,18 @@ export default function PrivateChatPage() {
       }
     });
 
-    fetchOtherUser();
-
     return () => off(otherUserRef, 'value', listener);
 
   }, [chatId, user]);
 
 
   useEffect(() => {
-    if (otherUser) {
-        document.title = `Chat with ${otherUser.customName}`;
-    } else {
-        document.title = 'Private Chat';
-    }
+    document.title = 'Private Chat';
     // Cleanup function to reset title
     return () => {
         document.title = 'Public Chat';
     };
-  }, [otherUser]);
+  }, []);
 
 
   if (loading) {
