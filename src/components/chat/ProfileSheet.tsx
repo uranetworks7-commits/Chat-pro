@@ -31,6 +31,8 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [friendName, setFriendName] = useState('');
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -59,6 +61,12 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     return () => off(requestsRef, 'value', listener);
 
   }, [user]);
+  
+  useEffect(() => {
+    if (!friendName) {
+      setSearchedUser(null);
+    }
+  }, [friendName]);
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
@@ -76,54 +84,49 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
         toast({ title: "You can't add yourself!", variant: 'destructive' });
         return;
     }
+    
+    setIsSearching(true);
+    setSearchedUser(null);
 
     const usersRef = ref(db, 'users');
-    const usernameQuery = query(usersRef, orderByChild('username'), equalTo(friendName.trim()));
+    const nameQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
 
     try {
-        const snapshot = await get(usernameQuery);
-
+        const snapshot = await get(nameQuery);
         if (snapshot.exists()) {
             const data = snapshot.val();
             const recipientId = Object.keys(data)[0];
             const recipientData = data[recipientId];
-            
-            const updates: any = {};
-            updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
-            updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
-
-            await update(ref(db), updates);
-            toast({ title: `Friend request sent to ${recipientData.customName}!` });
-            setFriendName('');
+            setSearchedUser(recipientData);
         } else {
-            // Let's try searching by custom name, but this might fail without the index.
-            const nameQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
-            const nameSnapshot = await get(nameQuery).catch(() => {
-                toast({ title: 'User not found. Searching by customName may require database indexing.', variant: 'destructive' });
-                return null;
-            });
-
-            if (nameSnapshot && nameSnapshot.exists()) {
-                 const data = nameSnapshot.val();
-                const recipientId = Object.keys(data)[0];
-                const recipientData = data[recipientId];
-                
-                const updates: any = {};
-                updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
-                updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
-
-                await update(ref(db), updates);
-                toast({ title: `Friend request sent to ${recipientData.customName}!` });
-                setFriendName('');
-            } else {
-                 toast({ title: 'User not found.', variant: 'destructive' });
-            }
+            toast({ title: 'User not found.', variant: 'destructive' });
+            setSearchedUser(null);
         }
+    } catch (error) {
+        console.error("Error searching friend:", error);
+        toast({ title: 'An error occurred during search.', variant: 'destructive' });
+    } finally {
+        setIsSearching(false);
+    }
+  };
+
+  const handleSendFriendRequest = async () => {
+    if (!user || !searchedUser) return;
+
+    try {
+        const updates: any = {};
+        updates[`/users/${user.username}/friendRequests/${searchedUser.username}`] = 'sent';
+        updates[`/users/${searchedUser.username}/friendRequests/${user.username}`] = 'pending';
+
+        await update(ref(db), updates);
+        toast({ title: `Friend request sent to ${searchedUser.customName}!` });
+        setFriendName('');
+        setSearchedUser(null);
     } catch (error) {
         console.error("Error sending friend request:", error);
         toast({ title: 'Failed to send friend request.', variant: 'destructive' });
     }
-  };
+};
 
   const handleFriendRequest = async (requesterId: string, action: 'accept' | 'reject') => {
       if (!user) return;
@@ -186,13 +189,28 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
          <div className="py-4 spacey-y-4">
             <h3 className="font-semibold text-foreground">Add Friend</h3>
             <div className="space-y-2">
-                <Label htmlFor="friend-name">Username or Custom Name</Label>
+                <Label htmlFor="friend-name">Custom Name</Label>
                 <div className="flex gap-2">
                     <Input id="friend-name" placeholder="Enter name..." value={friendName} onChange={(e) => setFriendName(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} />
-                    <Button onClick={handleSearchFriend} disabled={!friendName.trim()} size="icon">
-                        <UserPlus />
+                    <Button onClick={handleSearchFriend} disabled={!friendName.trim() || isSearching} size="icon">
+                        {isSearching ? <span className="animate-spin h-4 w-4 rounded-full border-b-2 border-current" /> : <Search />}
                     </Button>
                 </div>
+                 {searchedUser && (
+                    <div className="flex items-center justify-between p-2 rounded-md bg-secondary mt-2">
+                        <div className="flex items-center gap-3">
+                            <Avatar>
+                                <AvatarImage src={searchedUser.profileImageUrl} />
+                                <AvatarFallback>{searchedUser.customName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{searchedUser.customName}</span>
+                        </div>
+                        <Button onClick={handleSendFriendRequest} size="sm">
+                            <UserPlus className="mr-2 h-4 w-4" />
+                            Send Request
+                        </Button>
+                    </div>
+                )}
             </div>
         </div>
         <Separator />
