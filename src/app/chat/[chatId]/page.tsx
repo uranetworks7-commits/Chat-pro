@@ -106,8 +106,8 @@ export default function PrivateChatPage() {
             <ChatHeader otherUser={otherUser} />
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
-                <MessageInput chatId={chatId} />
                 <TypingIndicator chatId={chatId} />
+                <MessageInput chatId={chatId} />
             </div>
         </div>
     </main>

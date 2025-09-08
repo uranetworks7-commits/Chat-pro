@@ -15,8 +15,8 @@ export default function ChatInterface() {
       <Header />
       <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
         <MessageList isPrivateChat={false} />
-        <MessageInput />
         <TypingIndicator />
+        <MessageInput />
       </div>
     </div>
   );
