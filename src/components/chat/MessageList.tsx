@@ -125,18 +125,19 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
       
       newMessages.sort((a, b) => a.timestamp - b.timestamp);
 
-      if (newMessages.length > messages.length) {
-          const lastMessage = newMessages[newMessages.length - 1];
-          handleNewMessage(lastMessage, messages);
-      }
-
-      setMessages(newMessages);
+      setMessages((prevMessages) => {
+        if (newMessages.length > prevMessages.length) {
+            const lastMessage = newMessages[newMessages.length - 1];
+            handleNewMessage(lastMessage, prevMessages);
+        }
+        return newMessages;
+      });
     });
 
     return () => {
       off(messagesRef, 'value', listener);
     };
-  }, [chatId, messages, handleNewMessage]);
+  }, [chatId, handleNewMessage]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
