@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from '@/components/ui/dialog';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,25 +12,21 @@ import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
-import { RoleIcon } from './Icons';
+import { RoleIcon } from '@/components/chat/Icons';
 import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff, ArrowLeft } from 'lucide-react';
 import type { UserData } from '@/lib/types';
 import { useBackground } from '@/context/BackgroundContext';
-import { ScrollArea } from '../ui/scroll-area';
-
-interface ProfileSheetProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface FriendRequest {
     id: string;
     name: string;
 }
 
-export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
-  const { user, setUser } = useUser();
+export default function ProfilePage() {
+  const { user, setUser, loading } = useUser();
   const { toast } = useToast();
+  const router = useRouter();
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [friendCustomName, setFriendCustomName] = useState('');
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
@@ -40,7 +36,11 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
 
 
   useEffect(() => {
-    if (!user) return;
+    if (loading) return;
+    if (!user) {
+        router.replace('/');
+        return;
+    }
     
     const requestsRef = ref(db, `users/${user.username}/friendRequests`);
     const listener = onValue(requestsRef, async (snapshot) => {
@@ -65,7 +65,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
 
     return () => off(requestsRef, 'value', listener);
 
-  }, [user]);
+  }, [user, loading, router]);
   
   useEffect(() => {
     if (!friendCustomName) {
@@ -173,22 +173,19 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const handleLogout = () => {
     setUser(null);
     toast({ title: 'You have been logged out.' });
-    onOpenChange(false);
+    router.push('/');
   }
   
-  if (!user) return null;
+  if (loading || !user) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-full h-full w-full bg-background p-0 flex flex-col border-0">
-        <DialogHeader className="flex flex-row items-center justify-between p-2 border-b">
+    <main className="h-screen w-screen bg-background flex flex-col">
+        <header className="flex flex-row items-center justify-between p-2 border-b">
             <div className="flex items-center gap-2">
-                <DialogClose asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><ArrowLeft /></Button>
-                </DialogClose>
-                <DialogTitle>Profile</DialogTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}><ArrowLeft /></Button>
+                <h1 className="text-lg font-semibold">Profile</h1>
             </div>
-        </DialogHeader>
+        </header>
         <ScrollArea className="flex-1">
             <div className="py-4 flex flex-col items-center">
               <Avatar className="h-20 w-20 border-4 border-primary shadow-lg">
@@ -283,7 +280,6 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
             Logout
           </Button>
         </div>
-      </DialogContent>
-    </Dialog>
+    </main>
   );
 }

@@ -7,12 +7,11 @@ import { db } from '@/lib/firebase';
 import { ref, onValue, off } from 'firebase/database';
 import { User, Users, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import ProfileSheet from './ProfileSheet';
 import FriendsSheet from './FriendsSheet';
+import Link from 'next/link';
 
 export default function Header() {
   const { user } = useUser();
-  const [profileOpen, setProfileOpen] = useState(false);
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [hasFriendRequest, setHasFriendRequest] = useState(false);
 
@@ -47,11 +46,13 @@ export default function Header() {
           <h1 className="text-lg font-bold font-headline text-primary">Public Chat</h1>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" onClick={() => setProfileOpen(true)} className="relative h-8 w-8">
-            <User className="h-4 w-4" />
-            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
-            <span className="sr-only">Open Profile</span>
-          </Button>
+          <Link href="/profile">
+            <Button variant="ghost" size="icon" className="relative h-8 w-8">
+              <User className="h-4 w-4" />
+              {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
+              <span className="sr-only">Open Profile</span>
+            </Button>
+          </Link>
           <Button variant="ghost" size="icon" onClick={() => setFriendsOpen(true)} className="relative h-8 w-8">
             <Users className="h-4 w-4" />
             {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
@@ -59,7 +60,6 @@ export default function Header() {
           </Button>
         </div>
       </header>
-      <ProfileSheet open={profileOpen} onOpenChange={setProfileOpen} />
       <FriendsSheet open={friendsOpen} onOpenChange={setFriendsOpen} />
     </>
   );
