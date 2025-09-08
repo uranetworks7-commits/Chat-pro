@@ -100,7 +100,7 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
         messagePayload.text = messageText;
       }
       
-      await push(messagesRef, messagePayload);
+      const newMessageRef = await push(messagesRef, messagePayload);
       
       if (chatId) {
         try {
@@ -185,8 +185,8 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
             </Button>
         </div>
       )}
-      <div className="relative">
-        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
+      <div className="flex items-end gap-2">
+        {isBlocked && <MicOff className="h-5 w-5 text-destructive flex-shrink-0 mb-2" />}
         <Textarea
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
@@ -197,15 +197,18 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
             }
           }}
           placeholder={getPlaceholder()}
-          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "h-12 text-base")}
+          className={cn(
+            "flex-1 bg-background text-base min-h-12 max-h-48",
+            isBlocked ? "pl-2 text-destructive placeholder:text-destructive/80" : ""
+          )}
           disabled={isBlocked}
           rows={1}
         />
-        <div className="absolute top-1/2 right-1.5 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9">
+        <div className="flex items-end gap-1">
+          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9 mb-0.5">
             {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9">
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9 mb-0.5">
             <Send className="h-5 w-5" />
           </Button>
         </div>
