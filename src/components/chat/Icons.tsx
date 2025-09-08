@@ -14,9 +14,9 @@ export function RoleIcon({ role, className, ...props }: RoleIconProps) {
 
   switch (role) {
     case 'moderator':
-      return <Shield {...iconProps} className={cn(iconProps.className, 'text-blue-500')} />;
+      return <Shield {...iconProps} className={cn(iconProps.className, 'text-green-500')} />;
     case 'developer':
-      return <Crown {...iconProps} className={cn(iconProps.className, 'text-green-500')} />;
+      return <Crown {...iconProps} className={cn(iconProps.className, 'text-red-500')} />;
     case 'system':
       return <Cog {...iconProps} className={cn(iconProps.className, 'text-purple-500')} />;
     default:

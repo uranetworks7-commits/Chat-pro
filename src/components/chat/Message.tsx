@@ -30,15 +30,15 @@ interface MessageProps {
 
 const roleStyles = {
   user: 'text-foreground',
-  moderator: 'text-blue-400 font-bold',
-  developer: 'text-green-400 font-bold tracking-wider',
+  moderator: 'text-green-400 font-bold',
+  developer: 'text-red-400 font-bold tracking-wider',
   system: 'text-purple-400 font-semibold',
 };
 
 const messageBgStyles = {
     user: 'bg-secondary',
-    moderator: 'bg-blue-800/80 border border-blue-600',
-    developer: 'bg-green-800/80 border border-green-600',
+    moderator: 'bg-green-900/80 border border-green-700 shadow-[0_0_15px_2px_rgba(34,197,94,0.4)]',
+    developer: 'bg-red-900/80 border border-red-700 shadow-[0_0_15px_2px_rgba(239,68,68,0.4)]',
     system: 'bg-purple-800/80 border border-purple-600',
 }
 
@@ -82,7 +82,7 @@ function isValidHttpUrl(string: string) {
   } catch (_) {
     return false;  
   }
-  return url.protocol === "http:" || url.protocol === "https:";
+  return url.protocol === "http:" || url.protocol === "https:" || url.protocol === "https:";
 }
 
 const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
