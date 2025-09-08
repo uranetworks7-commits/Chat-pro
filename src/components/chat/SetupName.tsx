@@ -23,10 +23,10 @@ export default function SetupName() {
     const trimmedUsername = username.trim();
     const trimmedCustomName = customName.trim();
 
-    if (trimmedUsername.length < 3 || trimmedCustomName.length < 3) {
+    if (trimmedUsername.length < 2 || trimmedCustomName.length < 3) {
       toast({
         title: 'Invalid input',
-        description: 'Username and display name must be at least 3 characters.',
+        description: 'Username must be at least 2 characters and display name must be at least 3 characters.',
         variant: 'destructive',
       });
       return;
