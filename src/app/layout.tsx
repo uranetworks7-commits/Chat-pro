@@ -17,6 +17,7 @@ export const metadata: Metadata = {
 
 function AppBody({ children }: { children: React.ReactNode }) {
   const { background } = useBackground();
+  
   return (
     <body className={cn('font-body antialiased', `bg-${background}`)}>
       <UserProvider>

@@ -22,13 +22,8 @@ export function BackgroundProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    document.body.classList.remove('bg-default', 'bg-legacy', 'bg-none');
-    document.body.classList.add(`bg-${background}`);
-    localStorage.setItem('publicchat_background', background);
-  }, [background]);
-
   const handleSetBackground = (bg: BackgroundSetting) => {
+    localStorage.setItem('publicchat_background', bg);
     setBackground(bg);
   };
 
