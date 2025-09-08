@@ -13,8 +13,9 @@ import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from './Icons';
-import { Check, X, UserPlus, Search, LogOut } from 'lucide-react';
+import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff } from 'lucide-react';
 import type { UserData } from '@/lib/types';
+import { useBackground } from '@/context/BackgroundContext';
 
 interface ProfileSheetProps {
   open: boolean;
@@ -34,6 +35,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const { background, setBackground } = useBackground();
 
   useEffect(() => {
     if (!user) return;
@@ -202,6 +204,15 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
                     <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl}>Set</Button>
                 </div>
             </div>
+        </div>
+        <Separator />
+        <div className="py-4 space-y-4">
+          <h3 className="font-semibold text-foreground">Change Background</h3>
+          <div className="flex gap-2">
+              <Button variant={background === 'default' ? 'default' : 'outline'} onClick={() => setBackground('default')} className="flex-1">Default</Button>
+              <Button variant={background === 'legacy' ? 'default' : 'outline'} onClick={() => setBackground('legacy')} className="flex-1">Legacy</Button>
+              <Button variant={background === 'none' ? 'default' : 'outline'} onClick={() => setBackground('none')} size="icon"><ImageOff /></Button>
+          </div>
         </div>
         <Separator />
          <div className="py-4 spacey-y-4">

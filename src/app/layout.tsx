@@ -3,6 +3,7 @@ import { UserProvider } from '@/context/UserContext';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { cn } from '@/lib/utils';
+import { BackgroundProvider } from '@/context/BackgroundContext';
 
 export const metadata: Metadata = {
   title: 'Public Chat',
@@ -25,10 +26,12 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased')}>
-        <UserProvider>
-          {children}
-          <Toaster />
-        </UserProvider>
+        <BackgroundProvider>
+          <UserProvider>
+            {children}
+            <Toaster />
+          </UserProvider>
+        </BackgroundProvider>
       </body>
     </html>
   );
