@@ -74,11 +74,23 @@ function parseAndRenderMessage(text: string) {
     });
 }
 
+function isValidHttpUrl(string: string) {
+  let url;
+  try {
+    url = new URL(string);
+  } catch (_) {
+    return false;  
+  }
+  return url.protocol === "http:" || url.protocol === "https:";
+}
+
 const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest }: MessageProps) => {
   const { user } = useUser();
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
+
+  const showImage = message.imageUrl && isValidHttpUrl(message.imageUrl);
 
   return (
     <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
@@ -105,7 +117,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
-            {message.imageUrl && <Image src={message.imageUrl} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={300} height={200} />}
+            {showImage && <Image src={message.imageUrl!} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={300} height={200} />}
         </div>
         <span className="text-xs text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
