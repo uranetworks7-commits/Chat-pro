@@ -308,7 +308,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 <div 
                     {...longPressProps}
                     className={cn(
-                        'rounded-lg p-3 relative shadow-md mt-1', 
+                        'rounded-lg p-3 relative shadow-md mt-1 flex flex-col', 
                         isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
                     )}
                 >
@@ -319,20 +319,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     
                     {hasMedia && <div className=""><MediaContent url={message.imageUrl!} /></div>}
                     
-                    {showLikeButton && (
-                        <div className="mt-2 flex items-center gap-2">
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={handleLike}
-                                disabled={hasLiked && user?.role === 'user'}
-                                className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
-                            >
-                                <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
-                            </Button>
-                            {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
-                        </div>
-                    )}
+                    <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                        {format(new Date(message.timestamp), 'p')}
+                    </div>
                 </div>
             </PopoverTrigger>
             <PopoverContent className="w-auto p-1 rounded-full">
@@ -357,9 +346,20 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             </div>
         )}
 
-        <div className={cn("text-[0.6rem] text-muted-foreground mt-1 px-2", isSender ? 'text-right' : 'text-left')}>
-            {format(new Date(message.timestamp), 'p')}
-        </div>
+         {showLikeButton && (
+            <div className="mt-2 flex items-center gap-2">
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleLike}
+                    disabled={hasLiked && user?.role === 'user'}
+                    className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
+                >
+                    <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
+                </Button>
+                {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+            </div>
+        )}
       </div>
 
       <div className="self-start pt-6 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -371,5 +371,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
-
-    
