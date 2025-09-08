@@ -28,7 +28,7 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Friends</SheetTitle>
-          <SheetDescription>Your connections on EchoSphere.</SheetDescription>
+          <SheetDescription>Your connections on Public Chat.</SheetDescription>
         </SheetHeader>
         <div className="py-6">
           {friends.length > 0 ? (

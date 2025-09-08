@@ -28,26 +28,6 @@ export default function SetupName() {
     let customName = name.trim();
     let role: UserRole = 'user';
 
-    if (customName.startsWith('#225')) {
-      role = 'moderator';
-      customName = customName.substring(4);
-    } else if (customName.startsWith('#226')) {
-      role = 'developer';
-      customName = customName.substring(4);
-    } else if (customName.startsWith('#227')) {
-      role = 'system';
-      customName = 'URA System';
-    }
-
-    if (!customName) {
-        toast({
-          title: 'Invalid Name',
-          description: 'Please provide a name after the code.',
-          variant: 'destructive',
-        });
-        return;
-    }
-
     const username = `user_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const newUser: UserData = {
       username,
@@ -64,10 +44,10 @@ export default function SetupName() {
       const userRef = ref(db, `users/${username}`);
       await set(userRef, newUser);
       setUser(newUser);
-      localStorage.setItem('echosphere_user', JSON.stringify(newUser));
+      localStorage.setItem('publicchat_user', JSON.stringify(newUser));
       toast({
         title: `Welcome, ${customName}!`,
-        description: "You've successfully joined EchoSphere.",
+        description: "You've successfully joined the chat.",
       });
     } catch (error) {
       console.error('Failed to save user data:', error);
@@ -82,7 +62,7 @@ export default function SetupName() {
   return (
     <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95">
       <CardHeader>
-        <CardTitle className="text-3xl font-headline text-center text-primary">Welcome to EchoSphere</CardTitle>
+        <CardTitle className="text-3xl font-headline text-center text-primary">Welcome to Public Chat</CardTitle>
         <CardDescription className="text-center">
           Choose a name to display in the chat. This can only be set once.
         </CardDescription>

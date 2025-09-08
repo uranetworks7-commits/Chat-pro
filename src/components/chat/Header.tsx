@@ -21,7 +21,7 @@ export default function Header() {
            <div className="p-2 bg-primary rounded-full">
             <Bell className="h-6 w-6 text-primary-foreground" />
            </div>
-          <h1 className="text-2xl font-bold font-headline text-primary">EchoSphere</h1>
+          <h1 className="text-2xl font-bold font-headline text-primary">Public Chat</h1>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" size="icon" onClick={() => setProfileOpen(true)} className="relative">

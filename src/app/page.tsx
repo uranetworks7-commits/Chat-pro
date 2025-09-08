@@ -1,25 +1,14 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
-import SplashScreen from '@/components/chat/SplashScreen';
 import SetupName from '@/components/chat/SetupName';
 import ChatInterface from '@/components/chat/ChatInterface';
 
 export default function Home() {
-  const { user, loading, setUser } = useUser();
-  const [showSplash, setShowSplash] = useState(true);
+  const { user, loading } = useUser();
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 2000); // Show splash for 2 seconds
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (showSplash || loading) {
-    return <SplashScreen />;
+  if (loading) {
+    return null; // Or a minimal loader, but this makes it faster
   }
 
   return (

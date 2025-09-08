@@ -19,7 +19,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const storedUser = localStorage.getItem('echosphere_user');
+      const storedUser = localStorage.getItem('publicchat_user');
       if (storedUser) {
         const parsedUser: UserData = JSON.parse(storedUser);
         
@@ -28,7 +28,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
             const updatedUser = snapshot.val();
             if (updatedUser) {
                 setUserState(updatedUser);
-                localStorage.setItem('echosphere_user', JSON.stringify(updatedUser));
+                localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
             }
         });
         
@@ -36,7 +36,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Failed to parse user from localStorage", error);
-      localStorage.removeItem('echosphere_user');
+      localStorage.removeItem('publicchat_user');
     } finally {
       setLoading(false);
     }
@@ -45,9 +45,9 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const setUser = (userData: UserData | null) => {
     setUserState(userData);
     if (userData) {
-      localStorage.setItem('echosphere_user', JSON.stringify(userData));
+      localStorage.setItem('publicchat_user', JSON.stringify(userData));
     } else {
-      localStorage.removeItem('echosphere_user');
+      localStorage.removeItem('publicchat_user');
     }
   };
 
