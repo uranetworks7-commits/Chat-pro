@@ -175,28 +175,33 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     }
   }, [canModerate, isSender, message.senderId]);
 
+  const getChatId = () => {
+    if (!isPrivateChat || !user) return 'public';
+    const ids = [user.username, message.senderId].sort();
+    return ids.join('_');
+  }
+
   const handleLike = async () => {
     if (!user) return;
     const isPrivilegedUser = user.role === 'moderator' || user.role === 'developer';
-    const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
 
     if (!isPrivilegedUser && hasLiked) {
-        // Regular user has already liked, do nothing.
+        toast({ title: "You've already liked this message."});
         return;
     }
+
+    const chatIdForLike = getChatId();
+    const messageRef = ref(db, isPrivateChat ? `private_chats/${chatIdForLike}/messages/${message.id}` : `public_chat/${message.id}`);
 
     try {
         const updates: any = {};
         updates['likes'] = increment(1);
-        // Only mark that the user has liked if they are a regular user to enforce the one-like rule.
-        // Privileged users can like multiple times, so we don't track them this way.
         if (!isPrivilegedUser) {
             updates[`likedBy/${user.username}`] = true;
         }
         await update(messageRef, updates);
 
-        // Trigger confetti effect
-        setFireConfetti(false); // Reset to allow re-triggering
+        setFireConfetti(false);
         setTimeout(() => setFireConfetti(true), 10);
 
     } catch (error) {
@@ -208,23 +213,21 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const handleReaction = async (emoji: string) => {
     if (!user) return;
 
-    const messageRef = isPrivateChat ? `private_chats/${chatId}/messages/${message.id}` : `public_chat/${message.id}`;
-    const reactionRef = ref(db, `${messageRef}/reactions/${emoji}`);
+    const chatIdForReaction = getChatId();
+    const messageRefPath = isPrivateChat ? `private_chats/${chatIdForReaction}/messages/${message.id}` : `public_chat/${message.id}`;
+    const reactionRef = ref(db, `${messageRefPath}/reactions/${emoji}`);
 
     const snapshot = await get(reactionRef);
     const existingReactors: string[] = snapshot.val() || [];
     
     if (existingReactors.includes(user.username)) {
-        // User has already reacted with this emoji, so remove their reaction
         const newReactors = existingReactors.filter(u => u !== user.username);
         if (newReactors.length > 0) {
             await set(reactionRef, newReactors);
         } else {
-            // If no one is left, remove the emoji node
             await remove(reactionRef);
         }
     } else {
-        // Add user's reaction
         const newReactors = [...existingReactors, user.username];
         await set(reactionRef, newReactors);
     }
