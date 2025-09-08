@@ -1,9 +1,10 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, MessageCircle, UserX } from 'lucide-react';
+import { MoreHorizontal, MessageCircle, UserX, Trash2 } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import {
   DropdownMenu,
@@ -11,17 +12,74 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { db } from '@/lib/firebase';
+import { ref, onValue, off, update, remove } from 'firebase/database';
+import { useToast } from '@/hooks/use-toast';
+import type { UserData } from '@/lib/types';
 
 interface FriendsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+interface Friend extends UserData {
+    id: string;
+}
+
 export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) {
   const { user } = useUser();
+  const { toast } = useToast();
+  const [friends, setFriends] = useState<Friend[]>([]);
 
-  // Placeholder for friends list
-  const friends: any[] = []; 
+  useEffect(() => {
+      if (!user) return;
+      const friendsRef = ref(db, `users/${user.username}/friends`);
+
+      const listener = onValue(friendsRef, async (snapshot) => {
+          const friendIds = snapshot.val();
+          if (friendIds) {
+              const friendPromises = Object.keys(friendIds).map(id => {
+                  return new Promise<Friend | null>((resolve) => {
+                      const userRef = ref(db, `users/${id}`);
+                      onValue(userRef, (userSnapshot) => {
+                          if (userSnapshot.exists()) {
+                              resolve({ id, ...userSnapshot.val() });
+                          } else {
+                              resolve(null);
+                          }
+                      }, { onlyOnce: true });
+                  });
+              });
+              const friendsData = (await Promise.all(friendPromises)).filter(f => f !== null) as Friend[];
+              setFriends(friendsData);
+          } else {
+              setFriends([]);
+          }
+      });
+      return () => off(friendsRef, 'value', listener);
+
+  }, [user]);
+
+  const handleRemoveFriend = async (friendId: string) => {
+    if (!user) return;
+    
+    // Optimistically update UI
+    setFriends(friends.filter(f => f.id !== friendId));
+
+    const updates: any = {};
+    updates[`/users/${user.username}/friends/${friendId}`] = null;
+    updates[`/users/${friendId}/friends/${user.username}`] = null;
+
+    try {
+        await update(ref(db), updates);
+        toast({ title: 'Friend removed.' });
+    } catch (error) {
+        // Revert UI if error
+        // You might need a more robust state management for this
+        console.error("Failed to remove friend:", error);
+        toast({ title: 'Failed to remove friend.', variant: 'destructive' });
+    }
+  };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -37,22 +95,22 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
                 <li key={friend.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary">
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={friend.avatar} />
-                      <AvatarFallback>{friend.name.charAt(0)}</AvatarFallback>
+                      <AvatarImage src={friend.profileImageUrl} />
+                      <AvatarFallback>{friend.customName.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <span className="font-medium">{friend.name}</span>
+                    <span className="font-medium">{friend.customName}</span>
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast({ title: "Private messages coming soon!" })}>
                         <MessageCircle className="mr-2 h-4 w-4" />
                         Private Message
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
-                        <UserX className="mr-2 h-4 w-4" />
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
+                        <Trash2 className="mr-2 h-4 w-4" />
                         Remove Friend
                       </DropdownMenuItem>
                     </DropdownMenuContent>

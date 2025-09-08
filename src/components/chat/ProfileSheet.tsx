@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -9,14 +9,20 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update } from 'firebase/database';
+import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from './Icons';
-import { Check, X, UserPlus } from 'lucide-react';
+import { Check, X, UserPlus, Search } from 'lucide-react';
+import type { UserData } from '@/lib/types';
 
 interface ProfileSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface FriendRequest {
+    id: string;
+    name: string;
 }
 
 export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) {
@@ -24,6 +30,35 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const { toast } = useToast();
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
   const [friendName, setFriendName] = useState('');
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    
+    const requestsRef = ref(db, `users/${user.username}/friendRequests`);
+    const listener = onValue(requestsRef, async (snapshot) => {
+        const requestsData = snapshot.val();
+        if (requestsData) {
+            const pendingRequests = Object.entries(requestsData)
+                .filter(([_, status]) => status === 'pending')
+                .map(([id]) => id);
+
+            const requestsWithNames: FriendRequest[] = [];
+            for (const id of pendingRequests) {
+                const userSnapshot = await get(ref(db, `users/${id}`));
+                if (userSnapshot.exists()) {
+                    requestsWithNames.push({ id, name: userSnapshot.val().customName });
+                }
+            }
+            setFriendRequests(requestsWithNames);
+        } else {
+            setFriendRequests([]);
+        }
+    });
+
+    return () => off(requestsRef, 'value', listener);
+
+  }, [user]);
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
@@ -35,38 +70,33 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     setNewAvatarUrl('');
   };
 
-  const handleSendFriendRequestByName = async () => {
+  const handleSearchFriend = async () => {
     if (!friendName.trim() || !user) return;
-    if (friendName.trim() === user.customName) {
+    if (friendName.trim() === user.customName || friendName.trim() === user.username) {
         toast({ title: "You can't add yourself!", variant: 'destructive' });
         return;
     }
 
     const usersRef = ref(db, 'users');
-    const userQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
+    const nameQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
+    const usernameQuery = query(usersRef, orderByChild('username'), equalTo(friendName.trim()));
 
     try {
-        const snapshot = await get(userQuery);
+        const nameSnapshot = await get(nameQuery);
+        const usernameSnapshot = await get(usernameQuery);
+        const snapshot = nameSnapshot.exists() ? nameSnapshot : usernameSnapshot;
+
         if (snapshot.exists()) {
             const data = snapshot.val();
             const recipientId = Object.keys(data)[0];
             const recipientData = data[recipientId];
-            
-            if (!recipientData || !recipientId) {
-                toast({ title: 'User not found.', variant: 'destructive' });
-                return;
-            }
-
-            const senderRef = ref(db, `users/${user.username}/friendRequests/${recipientId}`);
-            const receiverRef = ref(db, `users/${recipientId}/friendRequests/${user.username}`);
             
             const updates: any = {};
             updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
             updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
 
             await update(ref(db), updates);
-
-            toast({ title: 'Friend request sent!' });
+            toast({ title: `Friend request sent to ${recipientData.customName}!` });
             setFriendName('');
         } else {
             toast({ title: 'User not found.', variant: 'destructive' });
@@ -76,15 +106,32 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
         toast({ title: 'Failed to send friend request.', variant: 'destructive' });
     }
   };
-  
-  // TODO: Add friend request logic
-  const friendRequests: any[] = []; // Placeholder
 
+  const handleFriendRequest = async (requesterId: string, action: 'accept' | 'reject') => {
+      if (!user) return;
+
+      const currentUserRef = ref(db, `users/${user.username}/friendRequests/${requesterId}`);
+      const requesterUserRef = ref(db, `users/${requesterId}/friendRequests/${user.username}`);
+      
+      await remove(currentUserRef);
+      await remove(requesterUserRef);
+
+      if (action === 'accept') {
+          const updates: any = {};
+          updates[`/users/${user.username}/friends/${requesterId}`] = true;
+          updates[`/users/${requesterId}/friends/${user.username}`] = true;
+          await update(ref(db), updates);
+          toast({ title: 'Friend request accepted!' });
+      } else {
+          toast({ title: 'Friend request rejected.' });
+      }
+  };
+  
   if (!user) return null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
+      <SheetContent className="overflow-y-auto">
         <SheetHeader>
           <SheetTitle>Your Profile</SheetTitle>
           <SheetDescription>View and manage your profile details.</SheetDescription>
@@ -112,13 +159,13 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
             </div>
         </div>
         <Separator />
-         <div className="py-4 space-y-4">
+         <div className="py-4 spacey-y-4">
             <h3 className="font-semibold text-foreground">Add Friend</h3>
             <div className="space-y-2">
-                <Label htmlFor="friend-name">Username</Label>
+                <Label htmlFor="friend-name">Username or Custom Name</Label>
                 <div className="flex gap-2">
-                    <Input id="friend-name" placeholder="Enter a username..." value={friendName} onChange={(e) => setFriendName(e.target.value)} />
-                    <Button onClick={handleSendFriendRequestByName} disabled={!friendName.trim()} size="icon">
+                    <Input id="friend-name" placeholder="Enter name..." value={friendName} onChange={(e) => setFriendName(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} />
+                    <Button onClick={handleSearchFriend} disabled={!friendName.trim()} size="icon">
                         <UserPlus />
                     </Button>
                 </div>
@@ -131,10 +178,10 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
             {friendRequests.length > 0 ? (
               friendRequests.map(req => (
                 <div key={req.id} className="flex items-center justify-between p-2 rounded-md bg-secondary">
-                  <span>{req.name}</span>
-                  <div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500"><Check /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500"><X /></Button>
+                  <span className="font-medium">{req.name}</span>
+                  <div className="flex items-center">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500 hover:bg-green-500/10" onClick={() => handleFriendRequest(req.id, 'accept')}><Check /></Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-500/10" onClick={() => handleFriendRequest(req.id, 'reject')}><X /></Button>
                   </div>
                 </div>
               ))
