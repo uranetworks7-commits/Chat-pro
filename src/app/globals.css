@@ -2,20 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body.bg-default {
-  background-image: url('https://files.catbox.moe/dri57s.jpg');
-}
-
-body.bg-legacy {
-  background-image: url('https://files.catbox.moe/0824jj.jpg');
-}
-
-body.bg-none {
-  background-image: none;
-  background-color: hsl(var(--background));
-}
-
 body {
+  background-image: url('https://files.catbox.moe/dri57s.jpg');
   font-family: var(--font-body), Arial, Helvetica, sans-serif;
   background-size: cover;
   background-position: center;

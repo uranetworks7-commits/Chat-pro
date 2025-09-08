@@ -6,7 +6,6 @@ import { UserProvider } from '@/context/UserContext';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { BackgroundProvider, useBackground } from '@/context/BackgroundContext';
 
 /*
 export const metadata: Metadata = {
@@ -14,19 +13,6 @@ export const metadata: Metadata = {
   description: 'A modern real-time chat application.',
 };
 */
-
-function AppBody({ children }: { children: React.ReactNode }) {
-  const { background } = useBackground();
-  
-  return (
-    <body className={cn('font-body antialiased', `bg-${background}`)}>
-      <UserProvider>
-        {children}
-        <Toaster />
-      </UserProvider>
-    </body>
-  );
-}
 
 export default function RootLayout({
   children,
@@ -45,9 +31,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <BackgroundProvider>
-        <AppBody>{children}</AppBody>
-      </BackgroundProvider>
+      <body className={cn('font-body antialiased')}>
+        <UserProvider>
+          {children}
+          <Toaster />
+        </UserProvider>
+      </body>
     </html>
   );
 }
