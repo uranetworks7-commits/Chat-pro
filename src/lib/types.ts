@@ -21,6 +21,8 @@ export interface Message {
   senderProfileUrl?: string;
   role: UserRole;
   timestamp: number;
+  likes?: number;
+  likedBy?: { [key: string]: boolean };
 }
 
 export interface PrivateChatMetadata {

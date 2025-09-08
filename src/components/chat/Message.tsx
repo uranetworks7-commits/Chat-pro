@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -19,8 +19,9 @@ import { RoleIcon } from './Icons';
 import { cn } from '@/lib/utils';
 import type { Message, UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, get } from 'firebase/database';
+import { ref, onValue, off, get, update, set } from 'firebase/database';
 import AudioPlayer from './AudioPlayer';
+import Confetti from './Confetti';
 
 interface MessageProps {
   message: Message;
@@ -132,10 +133,15 @@ const MediaContent = ({ url }: { url: string }) => {
 const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
   const [senderData, setSenderData] = useState<UserData | null>(null);
+  const [fireConfetti, setFireConfetti] = useState(false);
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
   const hasMedia = message.imageUrl && isValidHttpUrl(message.imageUrl);
+
+  const showLikeButton = message.text && message.text.includes('#');
+  const hasLiked = user ? message.likedBy && message.likedBy[user.username] : false;
+
 
   useEffect(() => {
     if (canModerate && !isSender) {
@@ -149,10 +155,33 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     }
   }, [canModerate, isSender, message.senderId]);
 
+  const handleLike = async () => {
+    if (!user) return;
+    if (hasLiked && user.role === 'user') return; // Regular users can't unlike or re-like
+
+    const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
+    
+    const newLikes = (message.likes || 0) + 1;
+    const newLikedBy = { ...(message.likedBy || {}), [user.username]: true };
+
+    try {
+        await update(messageRef, {
+            likes: newLikes,
+            likedBy: newLikedBy,
+        });
+        setFireConfetti(false); // Reset to allow re-triggering
+        setTimeout(() => setFireConfetti(true), 10);
+    } catch (error) {
+        console.error("Failed to like message:", error);
+    }
+  };
+
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
   return (
-    <div className={cn('flex items-start gap-1 p-1 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+    <>
+    <Confetti fire={fireConfetti} />
+    <div className={cn('flex items-start gap-1 p-1 my-2 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
       <div className="flex flex-col items-center w-10 flex-shrink-0">
         <Avatar className="h-6 w-6 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
@@ -162,7 +191,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         </Avatar>
         {!isPrivateChat && (
             <div className="flex items-center gap-1 mt-1">
-                <span className={cn('text-[9px] font-medium truncate', roleStyles[senderRole])}>
+                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
@@ -177,14 +206,28 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         )}>
             {!isSender && isPrivateChat && (
                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className={cn('text-[10px] font-semibold', roleStyles[senderRole])}>
+                    <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
                         {message.senderName}
                     </span>
                     {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
                 </div>
             )}
-            <div className="text-xs">{message.text && parseAndRenderMessage(message.text)}</div>
+            <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
             {hasMedia && <MediaContent url={message.imageUrl!} />}
+             {showLikeButton && (
+                <div className="mt-2 flex items-center gap-2">
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={handleLike}
+                        disabled={hasLiked && user?.role === 'user'}
+                        className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
+                    >
+                        <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
+                    </Button>
+                    {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+                </div>
+            )}
         </div>
         <span className="text-[8px] text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
@@ -194,7 +237,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
        <div className="self-center">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
+                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
                         <MoreHorizontal className="h-4 w-4 text-primary" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -212,6 +255,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             </DropdownMenu>
         </div>
     </div>
+    </>
   );
 };
 
