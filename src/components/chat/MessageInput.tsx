@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, ImagePlus, X } from 'lucide-react';
+import { Send, ImagePlus, X, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
@@ -26,6 +26,8 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
   const typingStatusRef = user ? ref(db, `typing/${chatId || 'public'}/${user.username}`) : null;
+
+  const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
   useEffect(() => {
     if (typingStatusRef) {
@@ -56,10 +58,10 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   const handleSendMessage = async () => {
     const messageText = text.trim();
     if (!messageText || !user) return;
-    if (user.isBlocked && user.blockExpires && user.blockExpires > Date.now()) {
+    if (isBlocked) {
         toast({
             title: "You are blocked",
-            description: `You cannot send messages for another ${Math.ceil((user.blockExpires - Date.now()) / 60000)} minutes.`,
+            description: `You cannot send messages for another ${Math.ceil((user.blockExpires! - Date.now()) / 60000)} minutes.`,
             variant: "destructive",
         });
         return;
@@ -148,10 +150,17 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     setIsSendingImage(!isSendingImage);
     setText('');
   }
+  
+  const getPlaceholder = () => {
+    if (isBlocked) return "You are blocked and cannot send messages.";
+    if (isSendingImage) return "Enter your image URL...";
+    return "Type your message...";
+  }
 
   return (
     <div className="p-4 border-t bg-card/80">
       <div className="relative">
+        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
         <Textarea
           value={text}
           onChange={(e) => {
@@ -166,15 +175,15 @@ export default function MessageInput({ chatId }: MessageInputProps) {
               handleSendMessage();
             }
           }}
-          placeholder={isSendingImage ? 'Enter your image URL...' : 'Type your message...'}
-          className={cn("pr-24 bg-background", "text-base md:text-sm h-12 md:h-auto")}
-          disabled={user?.isBlocked}
+          placeholder={getPlaceholder()}
+          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "text-base md:text-sm h-12 md:h-auto")}
+          disabled={isBlocked}
         />
         <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={user?.isBlocked}>
+          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={isBlocked}>
             {isSendingImage ? <X className="h-5 w-5" /> : <ImagePlus className="h-5 w-5" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || user?.isBlocked}>
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked}>
             <Send className="h-5 w-5" />
           </Button>
         </div>
