@@ -160,7 +160,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-        {!isSender && !isPrivateChat && (
+        {!isPrivateChat && (
              <div className="flex items-center gap-1 mt-1">
                 <span className={cn('text-[9px] font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
