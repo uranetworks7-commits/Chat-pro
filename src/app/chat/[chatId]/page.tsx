@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
@@ -11,10 +11,12 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 import MessageList from '@/components/chat/MessageList';
-import type { UserData } from '@/lib/types';
+import type { UserData, Message } from '@/lib/types';
 import SplashScreen from '@/components/chat/SplashScreen';
 import { useBackground } from '@/context/BackgroundContext';
 import { cn } from '@/lib/utils';
+import MessageInput from '@/components/chat/MessageInput';
+import TypingIndicator from '@/components/chat/TypingIndicator';
 
 interface ChatHeaderProps {
   otherUser: UserData | null;
@@ -57,6 +59,8 @@ export default function PrivateChatPage() {
   const { user, loading } = useUser();
   const [otherUser, setOtherUser] = useState<UserData | null>(null);
   const { background } = useBackground();
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   
   useEffect(() => {
     if (!chatId || !user) return;
@@ -98,13 +102,25 @@ export default function PrivateChatPage() {
     return <SplashScreen />;
   }
 
+  const handleReply = (message: Message) => {
+    setReplyTo(message);
+    inputRef.current?.focus();
+  };
+
+  const cancelReply = () => {
+    setReplyTo(null);
+  };
+
+
   return (
     <main className="h-[100vh] w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="h-full w-full max-w-6xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border">
             <ChatHeader otherUser={otherUser} />
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
-                <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
+                <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} onReply={handleReply} />
             </div>
+            <TypingIndicator chatId={chatId} />
+            <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
         </div>
     </main>
   );

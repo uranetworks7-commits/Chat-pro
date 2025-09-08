@@ -34,6 +34,7 @@ interface MessageListProps {
   chatId?: string; // For private chats
   isPrivateChat?: boolean;
   otherUserName?: string;
+  onReply: (message: Message) => void;
 }
 
 function WelcomeMessage({ otherUserName }: { otherUserName?: string }) {
@@ -56,7 +57,7 @@ const formatDateSeparator = (date: Date) => {
 }
 
 
-export default function MessageList({ chatId, isPrivateChat, otherUserName }: MessageListProps) {
+export default function MessageList({ chatId, isPrivateChat, otherUserName, onReply }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const { user } = useUser();
   const { toast } = useToast();
@@ -69,7 +70,6 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const userInteractedRef = useRef(false);
   const [pendingBlocks, setPendingBlocks] = useState<Map<string, NodeJS.Timeout>>(new Map());
   const [messageToWarn, setMessageToWarn] = useState<Message | null>(null);
-  const [replyTo, setReplyTo] = useState<Message | null>(null);
   const prevMessagesRef = useRef<Message[]>([]);
 
   const handleNewMessage = useCallback((newMessage: Message) => {
@@ -88,11 +88,11 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
   useEffect(() => {
     if (messageToWarn && messageToWarn.senderId === user?.username) {
-      toast({
-        title: "Warning: Inappropriate Language Detected",
-        description: "Please delete this message immediately. Failure to do so will result in a temporary block.",
-        variant: "destructive",
-      });
+        toast({
+            title: "Warning: Inappropriate Language Detected",
+            description: "Please delete this message. Failure to comply may result in a temporary block.",
+            variant: "destructive",
+        });
     }
   }, [messageToWarn, user, toast]);
 
@@ -123,12 +123,13 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
       
       newMessages.sort((a, b) => a.timestamp - b.timestamp);
 
-      setMessages(newMessages);
-
+      
       if (newMessages.length > prevMessagesRef.current.length) {
           const lastMessage = newMessages[newMessages.length - 1];
           handleNewMessage(lastMessage);
       }
+      setMessages(newMessages);
+
     });
 
     return () => {
@@ -206,10 +207,6 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     setMessageToReport(message);
     setReportDialogOpen(true);
   };
-
-  const handleReply = (message: Message) => {
-    setReplyTo(message);
-  }
   
   const handleBlock = async (userIdToBlock: string) => {
     const userToBlockRef = ref(db, `users/${userIdToBlock}`);
@@ -297,18 +294,12 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     setReportDialogOpen(false);
     setMessageToReport(null);
   };
-
-  const cancelReply = () => {
-    setReplyTo(null);
-  };
   
   if (isPrivateChat && messages.length === 0) {
     return (
-        <div className="flex-1 flex flex-col min-h-0">
-            <WelcomeMessage otherUserName={otherUserName} />
-            <TypingIndicator chatId={chatId} />
-            <MessageInput chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
-        </div>
+      <div className="flex-1 flex flex-col min-h-0">
+          <WelcomeMessage otherUserName={otherUserName} />
+      </div>
     );
   }
 
@@ -338,7 +329,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
                             onBlock={handleBlock}
                             onUnblock={handleUnblock}
                             onSendFriendRequest={handleSendFriendRequest}
-                            onReply={handleReply}
+                            onReply={onReply}
                             isPrivateChat={isPrivateChat}
                         />
                     </motion.div>
@@ -348,8 +339,6 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
           </AnimatePresence>
         </div>
       </ScrollArea>
-       <TypingIndicator chatId={chatId} />
-       <MessageInput chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
 
       {messageToReport && (
         <ReportDialog
@@ -375,5 +364,3 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     </>
   );
 }
-
-    

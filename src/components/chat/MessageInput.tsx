@@ -1,13 +1,13 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Send, Paperclip, X, MicOff, CornerUpLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, push, set, serverTimestamp, onDisconnect, remove, get, update } from 'firebase/database';
+import { ref as dbRef, push, set, serverTimestamp, onDisconnect, remove, get, update } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import type { UserData, Message } from '@/lib/types';
@@ -18,13 +18,14 @@ interface MessageInputProps {
   onCancelReply: () => void;
 }
 
-export default function MessageInput({ chatId, replyTo, onCancelReply }: MessageInputProps) {
+const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
+    ({ chatId, replyTo, onCancelReply }, ref) => {
   const [text, setText] = useState('');
   const [isSendingMedia, setIsSendingMedia] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
-  const typingStatusRef = user ? ref(db, `typing/${chatId || 'public'}/${user.username}`) : null;
+  const typingStatusRef = user ? dbRef(db, `typing/${chatId || 'public'}/${user.username}`) : null;
 
   const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
@@ -74,7 +75,7 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
     }
 
     try {
-      const messagesRef = ref(db, chatId ? `private_chats/${chatId}/messages` : 'public_chat');
+      const messagesRef = dbRef(db, chatId ? `private_chats/${chatId}/messages` : 'public_chat');
       const messagePayload: any = {
         senderId: user.username,
         senderName: user.customName,
@@ -104,14 +105,14 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
       
       if (chatId) {
         try {
-            const chatMetadataRef = ref(db, `private_chats/${chatId}/metadata`);
+            const chatMetadataRef = dbRef(db, `private_chats/${chatId}/metadata`);
             const participantIds = chatId.split('_');
             
             const otherParticipantId = participantIds.find(id => id !== user.username);
 
             if (otherParticipantId) {
-                const otherUserRef = ref(db, `users/${otherParticipantId}`);
-                const currentUserRef = ref(db, `users/${user.username}`);
+                const otherUserRef = dbRef(db, `users/${otherParticipantId}`);
+                const currentUserRef = dbRef(db, `users/${user.username}`);
                 
                 const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
 
@@ -186,8 +187,8 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
         </div>
       )}
       <div className="flex items-end gap-2">
-        {isBlocked && <MicOff className="h-5 w-5 text-destructive flex-shrink-0 mb-2" />}
         <Textarea
+          ref={ref}
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={(e) => {
@@ -215,4 +216,7 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
       </div>
     </div>
   );
-}
+});
+
+MessageInput.displayName = "MessageInput";
+export default MessageInput;

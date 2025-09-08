@@ -5,12 +5,16 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, onValue, off } from 'firebase/database';
-import { User, Users, MessageCircle } from 'lucide-react';
+import { User, Users, MessageCircle, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FriendsSheet from './FriendsSheet';
 import Link from 'next/link';
 
-export default function Header() {
+interface HeaderProps {
+    onFocusInput?: () => void;
+}
+
+export default function Header({ onFocusInput }: HeaderProps) {
   const { user } = useUser();
   const [friendsOpen, setFriendsOpen] = useState(false);
   const [hasFriendRequest, setHasFriendRequest] = useState(false);
@@ -44,6 +48,11 @@ export default function Header() {
             <MessageCircle className="h-4 w-4 text-primary-foreground" />
            </div>
           <h1 className="text-lg font-bold font-headline text-primary">Public Chat</h1>
+          {onFocusInput && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFocusInput}>
+                <Pencil className="h-4 w-4"/>
+            </Button>
+          )}
         </div>
         <div className="flex items-center gap-1">
           <Link href="/profile">

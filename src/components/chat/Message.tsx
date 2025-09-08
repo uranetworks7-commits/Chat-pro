@@ -177,7 +177,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 
   const handleLike = async () => {
     if (!user) return;
-    if (hasLiked && user.role === 'user') return; // Regular users can't unlike or re-like
+    const isPrivilegedUser = user.role === 'moderator' || user.role === 'developer';
+
+    if (hasLiked && !isPrivilegedUser) return; // Regular users can't unlike or re-like
 
     const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
     
@@ -241,7 +243,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const MessageOptions = () => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-50 hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" className="h-7 w-7">
                 <MoreHorizontal className="h-4 w-4" />
             </Button>
         </DropdownMenuTrigger>
@@ -363,5 +365,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
-
-    
