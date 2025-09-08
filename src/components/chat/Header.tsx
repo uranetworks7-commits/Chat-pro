@@ -54,7 +54,7 @@ export default function Header() {
           </Button>
           <Button variant="ghost" size="icon" onClick={() => setFriendsOpen(true)} className="relative">
             <Users className="h-6 w-6" />
-            {hasNewFriendMessage && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-card" />}
+            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-card" />}
             <span className="sr-only">Open Friends List</span>
           </Button>
         </div>
