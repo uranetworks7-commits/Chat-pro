@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off } from 'firebase/database';
+import { ref, onValue, off, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -57,13 +57,29 @@ export default function PrivateChatPage() {
   useEffect(() => {
     if (!chatId || !user) return;
 
+    let listener: any;
     const participantIds = chatId.split('_');
     const otherUserId = participantIds.find(id => id !== user.username);
     
     if (!otherUserId) return;
 
     const otherUserRef = ref(db, `users/${otherUserId}`);
-    const listener = onValue(otherUserRef, (snapshot) => {
+    
+    const fetchOtherUser = async () => {
+        try {
+            const snapshot = await get(otherUserRef);
+            if (snapshot.exists()) {
+                const userData = snapshot.val();
+                setOtherUser({ ...userData, username: otherUserId });
+            }
+        } catch (error) {
+            console.error("Failed to fetch other user:", error);
+        }
+    }
+
+    fetchOtherUser();
+
+    listener = onValue(otherUserRef, (snapshot) => {
       if (snapshot.exists()) {
         const userData = snapshot.val();
         setOtherUser({ ...userData, username: otherUserId });
@@ -75,16 +91,12 @@ export default function PrivateChatPage() {
   }, [chatId, user]);
 
   useEffect(() => {
-    if (user && otherUser) {
-      document.title = `Chat between ${user.customName} and ${otherUser.customName}`;
-    } else {
-      document.title = 'Private Chat';
-    }
+    document.title = 'Private Chat';
     // Cleanup function to reset title
     return () => {
         document.title = 'Public Chat';
     };
-  }, [user, otherUser]);
+  }, []);
 
 
   if (loading) {
