@@ -8,7 +8,7 @@ import { db } from '@/lib/firebase';
 import { ref, onValue, off, get } from 'firebase/database';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Pencil } from 'lucide-react';
 
 import MessageList from '@/components/chat/MessageList';
 import type { UserData, Message } from '@/lib/types';
@@ -20,9 +20,10 @@ import TypingIndicator from '@/components/chat/TypingIndicator';
 
 interface ChatHeaderProps {
   otherUser: UserData | null;
+  onFocusInput?: () => void;
 }
 
-function ChatHeader({ otherUser }: ChatHeaderProps) {
+function ChatHeader({ otherUser, onFocusInput }: ChatHeaderProps) {
   const router = useRouter();
 
   return (
@@ -30,8 +31,13 @@ function ChatHeader({ otherUser }: ChatHeaderProps) {
       <div className="flex items-center gap-3">
         <Button variant="ghost" onClick={() => router.push('/')} className="p-2 h-auto">
           <ArrowLeft className="h-6 w-6" />
-          <span className="ml-2 font-semibold hidden sm:inline">Private Message</span>
         </Button>
+        <span className="ml-2 font-semibold hidden sm:inline">Private Message</span>
+        {onFocusInput && (
+            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onFocusInput}>
+                <Pencil className="h-4 w-4"/>
+            </Button>
+        )}
       </div>
       <div className="flex items-center gap-4">
         {otherUser ? (
@@ -111,16 +117,20 @@ export default function PrivateChatPage() {
     setReplyTo(null);
   };
 
+  const handleFocusInput = () => {
+    inputRef.current?.focus();
+  };
+
 
   return (
     <main className="h-[100vh] w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="h-full w-full max-w-6xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border">
-            <ChatHeader otherUser={otherUser} />
+            <ChatHeader otherUser={otherUser} onFocusInput={handleFocusInput} />
+            <TypingIndicator chatId={chatId} />
+            <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} onReply={handleReply} />
             </div>
-            <TypingIndicator chatId={chatId} />
-            <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
         </div>
     </main>
   );
