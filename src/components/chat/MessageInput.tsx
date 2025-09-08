@@ -131,7 +131,7 @@ export default function MessageInput() {
               handleSendMessage();
             }
           }}
-          placeholder="Type your message... (Shift+Enter for new line)"
+          placeholder="Type your message..."
           className="pr-24 rounded-full bg-background"
         />
         <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">
