@@ -3,7 +3,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import type { UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, set } from 'firebase/database';
+import { ref, onValue, off, set, get } from 'firebase/database';
 
 interface UserContextType {
   user: UserData | null;
@@ -19,24 +19,38 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let userRef: any;
-    const loadUser = () => {
+    const loadUser = async () => {
       try {
-        const storedUser = localStorage.getItem('publicchat_user');
-        if (storedUser) {
-          const parsedUser: UserData = JSON.parse(storedUser);
-          setUserState(parsedUser);
+        const storedUserJson = localStorage.getItem('publicchat_user');
+        if (storedUserJson) {
+          const storedUser: UserData = JSON.parse(storedUserJson);
+          
+          // Verify user exists in Firebase
+          const dbUserRef = ref(db, `users/${storedUser.username}`);
+          const snapshot = await get(dbUserRef);
 
-          userRef = ref(db, `users/${parsedUser.username}`);
-          onValue(userRef, (snapshot) => {
-            const updatedUser = snapshot.val();
-            if (updatedUser) {
-              setUserState(updatedUser);
-              localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
-            }
-          });
+          if (snapshot.exists()) {
+            const latestUserData = snapshot.val();
+            setUserState(latestUserData);
+            localStorage.setItem('publicchat_user', JSON.stringify(latestUserData));
+
+            // Set up listener for real-time updates
+            userRef = dbUserRef;
+            onValue(userRef, (snapshot) => {
+              const updatedUser = snapshot.val();
+              if (updatedUser) {
+                setUserState(updatedUser);
+                localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
+              }
+            });
+
+          } else {
+            // User in localStorage doesn't exist in DB, clear it
+            localStorage.removeItem('publicchat_user');
+          }
         }
       } catch (error) {
-        console.error("Failed to parse user from localStorage", error);
+        console.error("Failed to parse or verify user from localStorage", error);
         localStorage.removeItem('publicchat_user');
       } finally {
         setLoading(false);
@@ -55,9 +69,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUserState(userData);
     if (userData) {
       localStorage.setItem('publicchat_user', JSON.stringify(userData));
-      const userRef = ref(db, `users/${userData.username}`);
-      set(userRef, userData);
     } else {
+      // on logout, remove from local storage
+      const storedUserJson = localStorage.getItem('publicchat_user');
+      if (storedUserJson) {
+        const storedUser: UserData = JSON.parse(storedUserJson);
+        const userRef = ref(db, `users/${storedUser.username}`);
+        off(userRef); // Turn off listener
+      }
       localStorage.removeItem('publicchat_user');
     }
   };

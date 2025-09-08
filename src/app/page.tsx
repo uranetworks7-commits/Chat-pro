@@ -13,7 +13,7 @@ export default function Home() {
 
   return (
     <main className="h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
-      {!user?.customName ? <SetupName /> : <ChatInterface />}
+      {!user ? <SetupName /> : <ChatInterface />}
     </main>
   );
 }
