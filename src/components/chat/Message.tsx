@@ -182,7 +182,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     <>
     <Confetti fire={fireConfetti} />
     <div className={cn('flex items-start gap-1 p-1 my-2 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
-      <div className="flex flex-col items-center w-10 flex-shrink-0">
+      <div className="flex flex-col items-center w-16 flex-shrink-0">
         <Avatar className="h-6 w-6 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
@@ -190,8 +190,8 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
           </AvatarFallback>
         </Avatar>
         {!isPrivateChat && (
-            <div className="flex items-center gap-1 mt-1 break-words w-full justify-center">
-                <span className={cn('text-xs font-medium', roleStyles[senderRole])}>
+            <div className="flex items-center gap-1 mt-1 w-full justify-center">
+                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2 flex-shrink-0" />}
