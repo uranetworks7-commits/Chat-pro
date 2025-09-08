@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, get, set } from 'firebase/database';
+import { ref, get, set, serverTimestamp } from 'firebase/database';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -92,19 +92,34 @@ export default function SetupName() {
     
     try {
         let role: UserRole = 'user';
+        let finalCustomName = trimmedCustomName;
+
         if (trimmedCustomName.includes('#225')) {
             role = 'moderator';
+            finalCustomName = trimmedCustomName.replace('#225', '').trim();
         } else if (trimmedCustomName.includes('#226')) {
             role = 'developer';
+            finalCustomName = trimmedCustomName.replace('#226', '').trim();
         } else if (trimmedCustomName.includes('#227')) {
             role = 'system';
+            finalCustomName = trimmedCustomName.replace('#227', '').trim();
+        }
+        
+        if (finalCustomName.length < 3) {
+            toast({
+              title: 'Invalid Display Name',
+              description: 'Display name (without code) must be at least 3 characters.',
+              variant: 'destructive',
+            });
+            setIsSubmitting(false);
+            return;
         }
 
-        const updatedUser: UserData = { ...existingUser, customName: trimmedCustomName, role };
+        const updatedUser: UserData = { ...existingUser, customName: finalCustomName, role };
 
         await set(userRef, updatedUser);
-        setUser(updatedUser);
-        toast({ title: `Welcome, ${trimmedCustomName}!` });
+        setUser({ ...updatedUser, username: existingUser.username });
+        toast({ title: `Welcome, ${finalCustomName}!` });
     } catch (error) {
         console.error('Failed to set user data:', error);
         toast({

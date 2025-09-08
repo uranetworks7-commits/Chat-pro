@@ -71,10 +71,9 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
-    const updatedUser = { ...user, profileImageUrl: newAvatarUrl };
-    const userRef = ref(db, `users/${user.username}`);
-    await set(userRef, updatedUser);
-    setUser(updatedUser);
+    const userRef = ref(db, `users/${user.username}/profileImageUrl`);
+    await set(userRef, newAvatarUrl);
+    setUser({ ...user, profileImageUrl: newAvatarUrl });
     toast({ title: 'Avatar updated successfully!' });
     setNewAvatarUrl('');
   };
@@ -99,12 +98,15 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
             const allUsers = snapshot.val();
             let foundUser: UserData | null = null;
             let foundUserId: string | null = null;
+            
+            const normalizedSearch = nameToSearch.toLowerCase();
 
             for (const userId in allUsers) {
-                if (allUsers[userId].customName === nameToSearch) {
+                const userData = allUsers[userId];
+                if (userData.customName && userData.customName.toLowerCase() === normalizedSearch) {
                     foundUserId = userId;
-                    foundUser = allUsers[userId];
-                    break; 
+                    foundUser = userData;
+                    break;
                 }
             }
 
