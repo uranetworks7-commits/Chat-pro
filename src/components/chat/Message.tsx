@@ -191,7 +191,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         </Avatar>
         {!isPrivateChat && (
             <div className="flex items-center gap-1 mt-1">
-                <span className={cn('text-sm font-medium truncate', roleStyles[senderRole])}>
+                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
@@ -206,13 +206,13 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         )}>
             {!isSender && isPrivateChat && (
                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
+                    <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
                         {message.senderName}
                     </span>
                     {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
                 </div>
             )}
-            <div className="text-sm break-words">{message.text && parseAndRenderMessage(message.text)}</div>
+            <div className="text-xs break-words">{message.text && parseAndRenderMessage(message.text)}</div>
             {hasMedia && <MediaContent url={message.imageUrl!} />}
              {showLikeButton && (
                 <div className="mt-2 flex items-center gap-2">
