@@ -77,6 +77,8 @@ export default function PrivateChatPage() {
   useEffect(() => {
     if (user && otherUser) {
       document.title = `Chat between ${user.customName} and ${otherUser.customName}`;
+    } else {
+      document.title = 'Private Chat';
     }
     // Cleanup function to reset title
     return () => {
@@ -109,4 +111,3 @@ export default function PrivateChatPage() {
     </main>
   );
 }
-
