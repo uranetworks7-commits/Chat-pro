@@ -10,8 +10,7 @@ import { ref, push, set, serverTimestamp, onDisconnect, remove } from 'firebase/
 import { useToast } from '@/hooks/use-toast';
 import { blockUser } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-
-const abusiveWords = ["abusive", "hacking"];
+import { blockedWords } from '@/lib/blocked-words';
 
 export default function MessageInput() {
   const [text, setText] = useState('');
@@ -59,9 +58,9 @@ export default function MessageInput() {
         return;
     }
 
-    const containsAbusiveWord = abusiveWords.some(word => messageText.toLowerCase().includes(word));
+    const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
     if (containsAbusiveWord) {
-        await blockUser(user, `User blocked for using inappropriate language.`);
+        await blockUser(user, `${user.customName} was blocked by URA Firing Squad for inappropriate language.`);
         toast({
             title: "You have been blocked",
             description: "Your account has been blocked for 30 minutes due to inappropriate language.",

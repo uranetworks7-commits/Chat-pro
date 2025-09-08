@@ -12,6 +12,7 @@ import ReportDialog from './ReportDialog';
 import { AnimatePresence, motion } from "framer-motion";
 import { blockUser } from '@/lib/utils';
 import { get, set as dbSet, push, serverTimestamp } from 'firebase/database';
+import { blockedWords } from '@/lib/blocked-words';
 
 
 export default function MessageList() {
@@ -83,7 +84,7 @@ export default function MessageList() {
     const snapshot = await get(userToBlockRef);
     if (snapshot.exists()) {
         const userToBlock = snapshot.val() as UserData;
-        await blockUser(userToBlock, `${senderName} was blocked by a moderator.`);
+        await blockUser(userToBlock, `${senderName} was blocked by a Moderator.`);
         toast({
             title: "User Blocked",
             description: `${senderName} has been blocked for 30 minutes.`,
@@ -116,6 +117,7 @@ export default function MessageList() {
 
   const handleReportSubmit = async (reason: string) => {
     if (!messageToReport) return;
+
     const reportsRef = ref(db, `reports/${messageToReport.id}`);
     await dbSet(reportsRef, {
       reporter: user?.username,
@@ -124,13 +126,28 @@ export default function MessageList() {
       reason,
       timestamp: serverTimestamp(),
     });
-    
-    await handleBlock(messageToReport.senderId, messageToReport.senderName);
 
-    toast({
-      title: 'Thank you for your feedback! 📢',
-      description: 'The user has been blocked and the report is under review.',
-    });
+    const messageContent = (messageToReport.text || '').toLowerCase();
+    const containsBlockedWord = blockedWords.some(word => messageContent.includes(word.toLowerCase()));
+
+    if (containsBlockedWord) {
+        const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
+        const snapshot = await get(userToBlockRef);
+        if (snapshot.exists()) {
+            const userToBlock = snapshot.val() as UserData;
+            await blockUser(userToBlock, `${messageToReport.senderName} was blocked by URA Firing Squad for inappropriate language.`);
+            toast({
+              title: 'Thank you for your feedback! 📢',
+              description: 'The user has been blocked and the report is under review.',
+            });
+        }
+    } else {
+        toast({
+            title: 'Thank you for reporting.',
+            description: 'This action is under review.',
+        });
+    }
+
     setReportDialogOpen(false);
     setMessageToReport(null);
   };
