@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -184,6 +184,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 <div className="flex items-center gap-2 text-center text-xs text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
                     <RoleIcon role="system" className="h-4 w-4" />
                     <span className="font-bold">{message.senderName}</span>
+                    <ArrowRight className="h-3 w-3" />
                     <span>{message.text}</span>
                 </div>
             </div>
@@ -261,3 +262,5 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
+    
