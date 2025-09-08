@@ -81,6 +81,13 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
     }
   };
 
+  const handlePrivateMessage = () => {
+    toast({
+      title: 'Coming Soon!',
+      description: 'Private messaging is currently in development. Stay tuned!',
+    });
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent>
@@ -92,7 +99,7 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
           {friends.length > 0 ? (
             <ul className="space-y-3">
               {friends.map(friend => (
-                <li key={friend.id} className="flex items-center justify-between p-2 rounded-md hover:bg-secondary">
+                <li key={friend.id} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-secondary">
                   <div className="flex items-center gap-3">
                     <Avatar>
                       <AvatarImage src={friend.profileImageUrl} />
@@ -100,21 +107,23 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
                     </Avatar>
                     <span className="font-medium">{friend.customName}</span>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon"><MoreHorizontal /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                      <DropdownMenuItem onClick={() => toast({ title: "Private messages coming soon!" })}>
-                        <MessageCircle className="mr-2 h-4 w-4" />
-                        Private Message
-                      </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Remove Friend
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                   <div className="flex items-center gap-1">
+                        <Button variant="outline" size="sm" onClick={handlePrivateMessage}>
+                          <MessageCircle className="mr-2 h-4 w-4" />
+                          Message
+                        </Button>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Remove Friend
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                   </div>
                 </li>
               ))}
             </ul>

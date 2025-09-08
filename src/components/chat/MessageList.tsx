@@ -13,6 +13,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import { blockUser } from '@/lib/utils';
 import { get, set as dbSet, push, serverTimestamp } from 'firebase/database';
 import { blockedWords } from '@/lib/blocked-words';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 
 export default function MessageList() {
@@ -21,6 +31,8 @@ export default function MessageList() {
   const { toast } = useToast();
   const [isReportDialogOpen, setReportDialogOpen] = useState(false);
   const [messageToReport, setMessageToReport] = useState<Message | null>(null);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -69,9 +81,18 @@ export default function MessageList() {
     }
   }, [messages.length]);
 
-  const handleDelete = async (messageId: string) => {
-    await remove(ref(db, `public_chat/${messageId}`));
-    toast({ title: 'Message deleted.' });
+  const handleDeleteRequest = (messageId: string) => {
+    setMessageToDelete(messageId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (messageToDelete) {
+      await remove(ref(db, `public_chat/${messageToDelete}`));
+      toast({ title: 'Message deleted.' });
+      setMessageToDelete(null);
+    }
+    setDeleteDialogOpen(false);
   };
 
   const handleReport = (message: Message) => {
@@ -170,7 +191,7 @@ export default function MessageList() {
                 <MessageComponent
                     message={message}
                     onReport={handleReport}
-                    onDelete={handleDelete}
+                    onDelete={handleDeleteRequest}
                     onBlock={(userId) => handleBlock(userId, message.senderName)}
                     onSendFriendRequest={handleSendFriendRequest}
                 />
@@ -186,6 +207,20 @@ export default function MessageList() {
           onSubmit={handleReportSubmit}
         />
       )}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the message from the chat.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
