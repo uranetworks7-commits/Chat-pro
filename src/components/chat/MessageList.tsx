@@ -57,6 +57,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const userInteractedRef = useRef(false);
   const [pendingBlocks, setPendingBlocks] = useState<Map<string, NodeJS.Timeout>>(new Map());
+  const [messageToWarn, setMessageToWarn] = useState<Message | null>(null);
 
   useEffect(() => {
     audioRef.current = new Audio('https://files.catbox.moe/fwx9jw.mp3');
@@ -78,7 +79,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     };
   }, [pendingBlocks]);
 
-  const handleNewMessage = useCallback((newMessage: Message, previousMessages: Message[]) => {
+    const handleNewMessage = useCallback((newMessage: Message, previousMessages: Message[]) => {
       // Play sound for new messages from others
       if (previousMessages.length > 0 && newMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
           audioRef.current.play().catch(e => console.error("Audio play failed:", e));
@@ -88,30 +89,34 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
       if (newMessage.senderId === user?.username && !isPrivateChat) {
           const messageText = newMessage.text || '';
           const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
-
           if (containsAbusiveWord) {
-              toast({
-                  title: "Warning: Inappropriate Language",
-                  description: "Your message contains blocked words. Further violations may result in a ban.",
-                  variant: "destructive",
-              });
-
-              const timeoutId = setTimeout(() => {
-                  if (user) {
-                      blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
-                      // Clean up from pending blocks map
-                      setPendingBlocks(prev => {
-                          const newMap = new Map(prev);
-                          newMap.delete(newMessage.id);
-                          return newMap;
-                      });
-                  }
-              }, 45 * 1000);
-              
-              setPendingBlocks(prev => new Map(prev).set(newMessage.id, timeoutId));
+            setMessageToWarn(newMessage);
           }
       }
-  }, [user, isPrivateChat, toast]);
+    }, [user, isPrivateChat]);
+
+  useEffect(() => {
+      if (messageToWarn && user) {
+          toast({
+              title: "Warning: Inappropriate Language",
+              description: "Your message contains blocked words. Further violations may result in a ban.",
+              variant: "destructive",
+          });
+
+          const timeoutId = setTimeout(() => {
+              blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
+              // Clean up from pending blocks map
+              setPendingBlocks(prev => {
+                  const newMap = new Map(prev);
+                  newMap.delete(messageToWarn.id);
+                  return newMap;
+              });
+          }, 45 * 1000);
+          
+          setPendingBlocks(prev => new Map(prev).set(messageToWarn.id, timeoutId));
+          setMessageToWarn(null); // Reset after handling
+      }
+  }, [messageToWarn, user, toast]);
 
 
   useEffect(() => {
