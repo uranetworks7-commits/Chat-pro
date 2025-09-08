@@ -191,7 +191,8 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     }
 
     const chatIdForLike = getChatId();
-    const messageRef = ref(db, isPrivateChat ? `private_chats/${chatIdForLike}/messages/${message.id}` : `public_chat/${message.id}`);
+    const messageRefPath = isPrivateChat ? `private_chats/${chatIdForLike}/messages/${message.id}` : `public_chat/${message.id}`;
+    const messageRef = ref(db, messageRefPath);
 
     try {
         const updates: any = {};
@@ -322,24 +323,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     </div>
                     
                     {hasMedia && <div className=""><MediaContent url={message.imageUrl!} /></div>}
-                    
-                    {showLikeButton && (
-                        <div className="mt-2 flex items-center gap-2">
-                            <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={handleLike}
-                                disabled={hasLiked && user?.role === 'user'}
-                                className={cn(
-                                  "h-auto p-1 text-xs",
-                                  isSender ? "bg-white/20 hover:bg-white/30" : "bg-background/20 hover:bg-background/40"
-                                )}
-                            >
-                                <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : (isSender ? "text-white" : "text-foreground"))} />
-                            </Button>
-                            {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
-                        </div>
-                    )}
 
                     <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
                         {format(new Date(message.timestamp), 'p')}
@@ -356,6 +339,21 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 </div>
             </PopoverContent>
         </Popover>
+
+        {showLikeButton && (
+            <div className="mt-1.5 flex items-center gap-2">
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleLike}
+                    disabled={hasLiked && user?.role === 'user'}
+                    className="h-auto p-1.5 rounded-full bg-background/50 hover:bg-background"
+                >
+                    <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-foreground")} />
+                </Button>
+                {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+            </div>
+        )}
 
         {message.reactions && Object.keys(message.reactions).length > 0 && (
             <div className="flex gap-1 flex-wrap mt-1 px-2">
