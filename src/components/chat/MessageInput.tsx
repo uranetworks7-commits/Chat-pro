@@ -80,9 +80,13 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             title: "Warning: Inappropriate Language",
             description: "Your message contains blocked words. Further violations may result in a ban.",
             variant: "destructive",
-            duration: 10000,
         });
-        blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
+        // Block after 45 seconds, but don't tell the user the time
+        setTimeout(() => {
+            if (user) {
+                blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
+            }
+        }, 45 * 1000);
     }
 
     try {

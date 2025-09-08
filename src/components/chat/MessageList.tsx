@@ -210,12 +210,15 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     });
 
     if (containsBlockedWord) {
-        const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
-        const snapshot = await get(userToBlockRef);
-        if (snapshot.exists()) {
-            const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
-            await blockUser(userToBlock, `${user.customName} reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
-        }
+        // Block after 5 seconds, but don't tell the user the time
+        setTimeout(async () => {
+            const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
+            const snapshot = await get(userToBlockRef);
+            if (snapshot.exists()) {
+                const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
+                await blockUser(userToBlock, `${user.customName} reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
+            }
+        }, 5 * 1000);
     }
 
     setReportDialogOpen(false);

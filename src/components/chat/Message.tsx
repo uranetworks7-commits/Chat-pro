@@ -191,6 +191,27 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         );
     }
     
+  const MessageOptions = () => (
+    <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-6 w-6">
+                <MoreHorizontal className="h-4 w-4 text-primary" />
+            </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align={isSender ? "start" : "end"}>
+        {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+        {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
+        {(canModerate || isSender) && <DropdownMenuSeparator />}
+        {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
+        {canModerate && !isSender && !isPrivateChat && (
+            isSenderBlocked 
+                ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
+                : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block</span></DropdownMenuItem>
+        )}
+        </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
     <>
     <Confetti fire={fireConfetti} />
@@ -203,30 +224,14 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
           </AvatarFallback>
         </Avatar>
         <div className="flex items-center gap-2">
+            {isSender && <MessageOptions />}
             <div className="flex items-center gap-1.5">
                 <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
             </div>
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <MoreHorizontal className="h-4 w-4 text-primary" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={isSender ? "end" : "start"}>
-                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
-                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
-                {(canModerate || isSender) && <DropdownMenuSeparator />}
-                {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
-                {canModerate && !isSender && !isPrivateChat && (
-                    isSenderBlocked 
-                        ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
-                        : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>
-                )}
-                </DropdownMenuContent>
-            </DropdownMenu>
+            {!isSender && <MessageOptions />}
         </div>
       </div>
 
