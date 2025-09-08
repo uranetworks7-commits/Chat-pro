@@ -23,7 +23,7 @@ export default function Home() {
   }
 
   return (
-    <main className="h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
+    <main className="min-h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-2 sm:p-0">
       {!user ? <SetupName /> : <ChatInterface />}
     </main>
   );

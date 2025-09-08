@@ -208,7 +208,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             }
           }}
           placeholder={getPlaceholder()}
-          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "text-base md:text-sm h-12 md:h-auto")}
+          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "h-12")}
           disabled={isBlocked}
         />
         <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">

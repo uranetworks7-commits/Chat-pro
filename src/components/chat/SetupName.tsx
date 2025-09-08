@@ -134,9 +134,9 @@ export default function SetupName() {
 
 
   return (
-    <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95">
+    <Card className="w-full max-w-sm sm:max-w-md shadow-2xl animate-in fade-in zoom-in-95">
       <CardHeader>
-        <CardTitle className="text-3xl font-headline text-center text-primary">
+        <CardTitle className="text-2xl sm:text-3xl font-headline text-center text-primary">
           {step === 'enterUsername' ? 'Welcome to Public Chat' : 'Set Your Display Name'}
         </CardTitle>
         <CardDescription className="text-center">
