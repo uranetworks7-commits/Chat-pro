@@ -88,8 +88,10 @@ export default function MessageInput({ chatId, replyTo, onCancelReply }: Message
             messageId: replyTo.id,
             senderName: replyTo.senderName,
             text: replyTo.text,
-            imageUrl: replyTo.imageUrl
         };
+        if (replyTo.imageUrl) {
+            messagePayload.replyTo.imageUrl = replyTo.imageUrl;
+        }
       }
 
       if (isSendingMedia) {
