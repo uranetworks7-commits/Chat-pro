@@ -24,8 +24,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+interface MessageListProps {
+  chatId?: string; // For private chats
+}
 
-export default function MessageList() {
+export default function MessageList({ chatId }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const { user } = useUser();
   const { toast } = useToast();
@@ -41,7 +44,8 @@ export default function MessageList() {
   }, []);
 
   useEffect(() => {
-    const messagesRef = ref(db, 'public_chat');
+    const messagesRef = ref(db, chatId ? `private_chats/${chatId}/messages` : 'public_chat');
+    
     const handleNewMessages = (snapshot: any) => {
       const data = snapshot.val();
       if (data) {
@@ -68,7 +72,7 @@ export default function MessageList() {
     return () => {
       off(messagesRef, 'value', handleNewMessages);
     };
-  }, [user?.username, messages.length]);
+  }, [chatId, user?.username, messages.length]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -88,7 +92,8 @@ export default function MessageList() {
 
   const confirmDelete = async () => {
     if (messageToDelete) {
-      await remove(ref(db, `public_chat/${messageToDelete}`));
+      const path = chatId ? `private_chats/${chatId}/messages/${messageToDelete}` : `public_chat/${messageToDelete}`;
+      await remove(ref(db, path));
       toast({ title: 'Message deleted.' });
       setMessageToDelete(null);
     }
@@ -194,6 +199,7 @@ export default function MessageList() {
                     onDelete={handleDeleteRequest}
                     onBlock={(userId) => handleBlock(userId, message.senderName)}
                     onSendFriendRequest={handleSendFriendRequest}
+                    isPrivateChat={!!chatId}
                 />
             </motion.div>
           ))}

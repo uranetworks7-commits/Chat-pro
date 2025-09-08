@@ -6,12 +6,16 @@ import { ref, onValue, off } from 'firebase/database';
 import { useUser } from '@/context/UserContext';
 import { AnimatePresence, motion } from "framer-motion";
 
-export default function TypingIndicator() {
+interface TypingIndicatorProps {
+  chatId?: string; // Optional: for private chats
+}
+
+export default function TypingIndicator({ chatId }: TypingIndicatorProps) {
   const [typingUsers, setTypingUsers] = useState<string[]>([]);
   const { user } = useUser();
 
   useEffect(() => {
-    const typingRef = ref(db, 'typing');
+    const typingRef = ref(db, `typing/${chatId || 'public'}`);
     const listener = onValue(typingRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
@@ -25,7 +29,7 @@ export default function TypingIndicator() {
     });
 
     return () => off(typingRef, 'value', listener);
-  }, [user?.customName]);
+  }, [chatId, user?.customName]);
 
   const getTypingText = () => {
     if (typingUsers.length === 0) return null;

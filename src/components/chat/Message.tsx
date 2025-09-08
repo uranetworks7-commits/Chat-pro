@@ -25,6 +25,7 @@ interface MessageProps {
   onDelete: (messageId: string) => void;
   onBlock: (userId: string) => void;
   onSendFriendRequest: (userId: string) => void;
+  isPrivateChat?: boolean;
 }
 
 const roleStyles = {
@@ -84,7 +85,7 @@ function isValidHttpUrl(string: string) {
   return url.protocol === "http:" || url.protocol === "https:";
 }
 
-const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest }: MessageProps) => {
+const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
@@ -132,11 +133,11 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isSender ? "end" : "start"}>
-                {!isSender && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
-                {!isSender && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
+                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
                 {(canModerate || isSender) && <DropdownMenuSeparator />}
                 {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
-                {canModerate && !isSender && <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>}
+                {canModerate && !isSender && !isPrivateChat && <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>

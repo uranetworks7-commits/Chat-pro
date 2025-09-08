@@ -16,6 +16,7 @@ import { db } from '@/lib/firebase';
 import { ref, onValue, off, update, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import type { UserData } from '@/lib/types';
+import { useRouter } from 'next/navigation';
 
 interface FriendsSheetProps {
   open: boolean;
@@ -30,6 +31,8 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
   const { user } = useUser();
   const { toast } = useToast();
   const [friends, setFriends] = useState<Friend[]>([]);
+  const router = useRouter();
+
 
   useEffect(() => {
       if (!user) return;
@@ -81,11 +84,14 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
     }
   };
 
-  const handlePrivateMessage = () => {
-    toast({
-      title: 'Coming Soon!',
-      description: 'Private messaging is currently in development. Stay tuned!',
-    });
+  const handlePrivateMessage = (friendId: string) => {
+    if (!user) return;
+
+    const ids = [user.username, friendId].sort();
+    const chatId = ids.join('_');
+    
+    onOpenChange(false);
+    router.push(`/chat/${chatId}`);
   };
 
   return (
@@ -108,7 +114,7 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
                     <span className="font-medium">{friend.customName}</span>
                   </div>
                    <div className="flex items-center gap-1">
-                        <Button variant="outline" size="sm" onClick={handlePrivateMessage}>
+                        <Button variant="outline" size="sm" onClick={() => handlePrivateMessage(friend.id)}>
                           <MessageCircle className="mr-2 h-4 w-4" />
                           Message
                         </Button>

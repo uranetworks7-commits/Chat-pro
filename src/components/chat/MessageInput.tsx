@@ -6,19 +6,25 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, push, set, serverTimestamp, onDisconnect, remove } from 'firebase/database';
+import { ref, push, set, serverTimestamp, onDisconnect, remove, get, update } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { blockUser } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { blockedWords } from '@/lib/blocked-words';
+import type { UserData } from '@/lib/types';
 
-export default function MessageInput() {
+
+interface MessageInputProps {
+  chatId?: string; // Optional: for private chats
+}
+
+export default function MessageInput({ chatId }: MessageInputProps) {
   const [text, setText] = useState('');
   const [isSendingImage, setIsSendingImage] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
-  const typingStatusRef = user ? ref(db, `typing/${user.username}`) : null;
+  const typingStatusRef = user ? ref(db, `typing/${chatId || 'public'}/${user.username}`) : null;
 
   useEffect(() => {
     if (typingStatusRef) {
@@ -72,7 +78,7 @@ export default function MessageInput() {
     }
 
     try {
-      const messagesRef = ref(db, 'public_chat');
+      const messagesRef = ref(db, chatId ? `private_chats/${chatId}/messages` : 'public_chat');
       const messagePayload: any = {
         senderId: user.username,
         senderName: user.customName,
@@ -88,6 +94,38 @@ export default function MessageInput() {
       }
       
       await push(messagesRef, messagePayload);
+
+      if (chatId) {
+        const chatMetadataRef = ref(db, `private_chats/${chatId}/metadata`);
+        const participantIds = chatId.split('_');
+        
+        const otherParticipantId = participantIds.find(id => id !== user.username);
+        const otherUserRef = ref(db, `users/${otherParticipantId}`);
+        const currentUserRef = ref(db, `users/${user.username}`);
+        
+        const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
+
+        if(otherUserSnap.exists() && currentUserSnap.exists()){
+            const otherUser = otherUserSnap.val() as UserData;
+            const currentUser = currentUserSnap.val() as UserData;
+
+            const metadataUpdate: any = {
+                lastMessage: isSendingImage ? 'Image' : messageText,
+                timestamp: serverTimestamp(),
+                participants: {
+                    [user.username]: {
+                        customName: currentUser.customName,
+                        profileImageUrl: currentUser.profileImageUrl
+                    },
+                    [otherParticipantId!]: {
+                        customName: otherUser.customName,
+                        profileImageUrl: otherUser.profileImageUrl
+                    }
+                }
+            };
+            await update(chatMetadataRef, metadataUpdate);
+        }
+      }
 
       setText('');
       if(isSendingImage) setIsSendingImage(false);

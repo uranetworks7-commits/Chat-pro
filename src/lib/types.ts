@@ -9,6 +9,7 @@ export interface UserData {
   friendRequests?: Record<string, 'pending' | 'sent'>;
   isBlocked?: boolean;
   blockExpires?: number;
+  privateChats?: Record<string, PrivateChatMetadata>;
 }
 
 export interface Message {
@@ -20,4 +21,15 @@ export interface Message {
   senderProfileUrl?: string;
   role: UserRole;
   timestamp: number;
+}
+
+export interface PrivateChatMetadata {
+  lastMessage: string;
+  timestamp: number;
+  participants: {
+    [key: string]: {
+      customName: string;
+      profileImageUrl: string;
+    }
+  }
 }
