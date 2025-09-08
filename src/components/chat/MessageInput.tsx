@@ -69,15 +69,27 @@ export default function MessageInput({ chatId }: MessageInputProps) {
 
     const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
     if (containsAbusiveWord) {
-        await blockUser(user, `${user.customName} was blocked by URA Firing Squad for inappropriate language.`);
         toast({
-            title: "You have been blocked",
-            description: "Your account has been blocked for 30 minutes due to inappropriate language.",
+            title: "Warning: Inappropriate Language",
+            description: "Your message contains blocked words. You will be blocked in 45 seconds if you send this.",
             variant: "destructive",
+            duration: 10000,
         });
+
+        setTimeout(() => {
+             if (user) {
+                blockUser(user, `Raj reported... Ura Firing Squad Blocked ${user.customName}.`);
+                toast({
+                    title: "You have been blocked",
+                    description: "Your account has been blocked for 30 minutes due to inappropriate language.",
+                    variant: "destructive",
+                });
+             }
+        }, 45000);
+        
         setText('');
         handleTyping(false);
-        return;
+        // We still send the message but the user will be blocked after the timeout.
     }
 
     try {

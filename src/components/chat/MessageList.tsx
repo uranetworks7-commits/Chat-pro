@@ -128,7 +128,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     if (snapshot.exists()) {
         const userToBlockData = snapshot.val() as UserData
         const userToBlock = { ...userToBlockData, username: userIdToBlock };
-        await blockUser(userToBlock, `${userToBlock.customName} was blocked by a Moderator.`);
+        await blockUser(userToBlock, `A moderator has blocked ${userToBlock.customName}.`);
         toast({
             title: "User Blocked",
             description: `${userToBlock.customName} has been blocked for 30 minutes.`,
@@ -175,11 +175,11 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   };
 
   const handleReportSubmit = async (reason: string) => {
-    if (!messageToReport) return;
+    if (!messageToReport || !user) return;
 
     const reportsRef = ref(db, `reports/${messageToReport.id}`);
     await dbSet(reportsRef, {
-      reporter: user?.username,
+      reporter: user.customName,
       reportedUser: messageToReport.senderId,
       message: messageToReport.text || 'Image Message',
       reason,
@@ -190,16 +190,20 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     const containsBlockedWord = blockedWords.some(word => messageContent.includes(word.toLowerCase()));
 
     if (containsBlockedWord) {
-        const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
-        const snapshot = await get(userToBlockRef);
-        if (snapshot.exists()) {
-            const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
-            await blockUser(userToBlock, `${messageToReport.senderName} was blocked by URA Firing Squad for inappropriate language.`);
-            toast({
-              title: 'Thank you for your feedback! 📢',
-              description: 'The user has been blocked and the report is under review.',
-            });
-        }
+        toast({
+            title: 'Thank you for your feedback! 📢',
+            description: 'The user will be blocked in 5 seconds and the report is under review.',
+            duration: 5000,
+        });
+
+        setTimeout(async () => {
+            const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
+            const snapshot = await get(userToBlockRef);
+            if (snapshot.exists()) {
+                const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
+                await blockUser(userToBlock, `Raj reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
+            }
+        }, 5000);
     } else {
         toast({
             title: 'Thank you for reporting.',
