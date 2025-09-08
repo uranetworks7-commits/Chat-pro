@@ -19,6 +19,16 @@ import { useToast } from '@/hooks/use-toast';
 import type { UserData } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface FriendsSheetProps {
   open: boolean;
@@ -34,6 +44,7 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
   const { toast } = useToast();
   const [friends, setFriends] = useState<Friend[]>([]);
   const router = useRouter();
+  const [friendToDelete, setFriendToDelete] = useState<Friend | null>(null);
 
 
   useEffect(() => {
@@ -96,61 +107,87 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
     router.push(`/chat/${chatId}`);
   };
 
+  const handleRemoveRequest = (friend: Friend) => {
+    setFriendToDelete(friend);
+  };
+
+  const confirmRemoveFriend = async () => {
+      if (!friendToDelete) return;
+      await handleRemoveFriend(friendToDelete.id);
+      setFriendToDelete(null);
+  };
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Friends</SheetTitle>
-          <SheetDescription>Your connections on Public Chat.</SheetDescription>
-        </SheetHeader>
-        <div className="py-6">
-          {friends.length > 0 ? (
-            <TooltipProvider>
-              <ul className="space-y-3">
-                {friends.map(friend => (
-                  <li key={friend.id} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-secondary">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={friend.profileImageUrl} />
-                        <AvatarFallback>{friend.customName.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{friend.customName}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        <Tooltip>
-                            <TooltipTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handlePrivateMessage(friend.id)}>
-                                    <MessageCircle className="h-5 w-5" />
-                                </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Private Message</p>
-                            </TooltipContent>
-                        </Tooltip>
-                          <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                              <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Remove Friend
-                              </DropdownMenuItem>
-                              </DropdownMenuContent>
-                          </DropdownMenu>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </TooltipProvider>
-          ) : (
-            <div className="text-center py-10 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">Your friends list is empty.</p>
-              <p className="text-xs text-muted-foreground mt-1">Send a friend request from a message!</p>
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent>
+          <SheetHeader>
+            <SheetTitle>Friends</SheetTitle>
+            <SheetDescription>Your connections on Public Chat.</SheetDescription>
+          </SheetHeader>
+          <div className="py-6">
+            {friends.length > 0 ? (
+              <TooltipProvider>
+                <ul className="space-y-3">
+                  {friends.map(friend => (
+                    <li key={friend.id} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-secondary">
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={friend.profileImageUrl} />
+                          <AvatarFallback>{friend.customName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{friend.customName}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                          <Tooltip>
+                              <TooltipTrigger asChild>
+                                  <Button variant="ghost" size="icon" onClick={() => handlePrivateMessage(friend.id)}>
+                                      <MessageCircle className="h-5 w-5" />
+                                  </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                  <p>Private Message</p>
+                              </TooltipContent>
+                          </Tooltip>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveRequest(friend)}>
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Remove Friend
+                                </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </TooltipProvider>
+            ) : (
+              <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">Your friends list is empty.</p>
+                <p className="text-xs text-muted-foreground mt-1">Send a friend request from a message!</p>
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+      <AlertDialog open={!!friendToDelete} onOpenChange={(isOpen) => !isOpen && setFriendToDelete(null)}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Do you want to delete {friendToDelete?.customName} from your friend list? This action cannot be undone.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setFriendToDelete(null)}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={confirmRemoveFriend}>Delete</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
