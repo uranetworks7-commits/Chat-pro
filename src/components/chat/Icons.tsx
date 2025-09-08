@@ -1,4 +1,4 @@
-import { User, Shield, Code, Cog, Crown } from 'lucide-react';
+import { User, Shield, Cog, Crown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { UserRole } from '@/lib/types';
 

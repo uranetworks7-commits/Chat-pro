@@ -96,6 +96,8 @@ export default function SetupName() {
             role = 'moderator';
         } else if (trimmedCustomName.includes('#226')) {
             role = 'developer';
+        } else if (trimmedCustomName.includes('#227')) {
+            role = 'system';
         }
 
         const updatedUser: UserData = { ...existingUser, customName: trimmedCustomName, role };

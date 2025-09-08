@@ -168,12 +168,13 @@ export default function MessageInput({ chatId }: MessageInputProps) {
           }}
           placeholder={isSendingImage ? 'Enter your image URL...' : 'Type your message...'}
           className={cn("pr-24 bg-background", "text-base md:text-sm h-12 md:h-auto")}
+          disabled={user?.isBlocked}
         />
         <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleImageMode}>
+          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={user?.isBlocked}>
             {isSendingImage ? <X className="h-5 w-5" /> : <ImagePlus className="h-5 w-5" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim()}>
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || user?.isBlocked}>
             <Send className="h-5 w-5" />
           </Button>
         </div>

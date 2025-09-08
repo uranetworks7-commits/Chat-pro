@@ -126,7 +126,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     const userToBlockRef = ref(db, `users/${userIdToBlock}`);
     const snapshot = await get(userToBlockRef);
     if (snapshot.exists()) {
-        const userToBlock = snapshot.val() as UserData;
+        const userToBlock = { ...snapshot.val(), username: userIdToBlock } as UserData;
         await blockUser(userToBlock, `${senderName} was blocked by a Moderator.`);
         toast({
             title: "User Blocked",
@@ -177,7 +177,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
         const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
         const snapshot = await get(userToBlockRef);
         if (snapshot.exists()) {
-            const userToBlock = snapshot.val() as UserData;
+            const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
             await blockUser(userToBlock, `${messageToReport.senderName} was blocked by URA Firing Squad for inappropriate language.`);
             toast({
               title: 'Thank you for your feedback! 📢',
