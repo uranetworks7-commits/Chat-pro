@@ -92,15 +92,28 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     setSearchedUser(null);
 
     const usersRef = ref(db, 'users');
-    const nameQuery = query(usersRef, orderByChild('customName'), equalTo(nameToSearch));
 
     try {
-        const snapshot = await get(nameQuery);
+        const snapshot = await get(usersRef);
         if (snapshot.exists()) {
-            const data = snapshot.val();
-            const recipientId = Object.keys(data)[0];
-            const recipientData = data[recipientId] as UserData;
-            setSearchedUser({ ...recipientData, username: recipientId });
+            const allUsers = snapshot.val();
+            let foundUser: UserData | null = null;
+            let foundUserId: string | null = null;
+
+            for (const userId in allUsers) {
+                if (allUsers[userId].customName === nameToSearch) {
+                    foundUserId = userId;
+                    foundUser = allUsers[userId];
+                    break; 
+                }
+            }
+
+            if (foundUser && foundUserId) {
+                setSearchedUser({ ...foundUser, username: foundUserId });
+            } else {
+                toast({ title: 'User not found.', variant: 'destructive' });
+                setSearchedUser(null);
+            }
         } else {
             toast({ title: 'User not found.', variant: 'destructive' });
             setSearchedUser(null);
