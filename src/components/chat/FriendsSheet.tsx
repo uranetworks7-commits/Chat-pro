@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import { ref, onValue, off, update, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import type { UserData } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FriendsSheetProps {
   open: boolean;
@@ -103,36 +105,44 @@ export default function FriendsSheet({ open, onOpenChange }: FriendsSheetProps) 
         </SheetHeader>
         <div className="py-6">
           {friends.length > 0 ? (
-            <ul className="space-y-3">
-              {friends.map(friend => (
-                <li key={friend.id} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-secondary">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={friend.profileImageUrl} />
-                      <AvatarFallback>{friend.customName.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <span className="font-medium">{friend.customName}</span>
-                  </div>
-                   <div className="flex items-center gap-1">
-                        <Button variant="outline" size="sm" onClick={() => handlePrivateMessage(friend.id)}>
-                          <MessageCircle className="mr-2 h-4 w-4" />
-                          Message
-                        </Button>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                            <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Remove Friend
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                   </div>
-                </li>
-              ))}
-            </ul>
+            <TooltipProvider>
+              <ul className="space-y-3">
+                {friends.map(friend => (
+                  <li key={friend.id} className="flex items-center justify-between p-2 rounded-md transition-colors hover:bg-secondary">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage src={friend.profileImageUrl} />
+                        <AvatarFallback>{friend.customName.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">{friend.customName}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button variant="ghost" size="icon" onClick={() => handlePrivateMessage(friend.id)}>
+                                    <MessageCircle className="h-5 w-5" />
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                <p>Private Message</p>
+                            </TooltipContent>
+                        </Tooltip>
+                          <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleRemoveFriend(friend.id)}>
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Remove Friend
+                              </DropdownMenuItem>
+                              </DropdownMenuContent>
+                          </DropdownMenu>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </TooltipProvider>
           ) : (
             <div className="text-center py-10 border-2 border-dashed rounded-lg">
               <p className="text-muted-foreground">Your friends list is empty.</p>
