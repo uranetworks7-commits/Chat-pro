@@ -159,11 +159,11 @@ export default function MessageInput({ chatId }: MessageInputProps) {
                         participants: {
                             [currentUser.username]: {
                                 customName: currentUser.customName,
-                                profileImageUrl: currentUser.profileImageUrl
+                                profileImageUrl: currentUser.profileImageUrl || ''
                             },
                             [otherUser.username]: {
                                 customName: otherUser.customName,
-                                profileImageUrl: otherUser.profileImageUrl
+                                profileImageUrl: otherUser.profileImageUrl || ''
                             }
                         }
                     };
