@@ -9,9 +9,7 @@ import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, push, set, serverTimestamp, onDisconnect, remove, get, update } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
-import { blockUser } from '@/lib/utils';
 import { cn } from '@/lib/utils';
-import { blockedWords } from '@/lib/blocked-words';
 import type { UserData } from '@/lib/types';
 
 
@@ -72,21 +70,6 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             variant: "destructive",
         });
         return;
-    }
-
-    const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
-    if (containsAbusiveWord) {
-        toast({
-            title: "Warning: Inappropriate Language",
-            description: "Your message contains blocked words. Further violations may result in a ban.",
-            variant: "destructive",
-        });
-        // Block after 45 seconds, but don't tell the user the time
-        setTimeout(() => {
-            if (user) {
-                blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
-            }
-        }, 45 * 1000);
     }
 
     try {

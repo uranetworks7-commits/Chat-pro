@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { ref, onValue, off, remove, update } from 'firebase/database';
 import { useUser } from '@/context/UserContext';
@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import ReportDialog from './ReportDialog';
 import { AnimatePresence, motion } from "framer-motion";
 import { blockUser, unblockUser } from '@/lib/utils';
-import { get, set as dbSet, push, serverTimestamp } from 'firebase/database';
+import { get, set as dbSet, serverTimestamp } from 'firebase/database';
 import { blockedWords } from '@/lib/blocked-words';
 import {
   AlertDialog,
@@ -56,6 +56,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const userInteractedRef = useRef(false);
+  const [pendingBlocks, setPendingBlocks] = useState<Map<string, NodeJS.Timeout>>(new Map());
 
   useEffect(() => {
     audioRef.current = new Audio('https://files.catbox.moe/fwx9jw.mp3');
@@ -72,39 +73,70 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     return () => {
         window.removeEventListener('click', handleInteraction);
         window.removeEventListener('keydown', handleInteraction);
+        // Clear all pending timeouts on component unmount
+        pendingBlocks.forEach(timeoutId => clearTimeout(timeoutId));
     };
-  }, []);
+  }, [pendingBlocks]);
+
+  const handleNewMessage = useCallback((newMessage: Message, previousMessages: Message[]) => {
+      // Play sound for new messages from others
+      if (previousMessages.length > 0 && newMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
+          audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+      }
+
+      // Handle self-sent messages with blocked words
+      if (newMessage.senderId === user?.username && !isPrivateChat) {
+          const messageText = newMessage.text || '';
+          const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
+
+          if (containsAbusiveWord) {
+              toast({
+                  title: "Warning: Inappropriate Language",
+                  description: "Your message contains blocked words. Further violations may result in a ban.",
+                  variant: "destructive",
+              });
+
+              const timeoutId = setTimeout(() => {
+                  if (user) {
+                      blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
+                      // Clean up from pending blocks map
+                      setPendingBlocks(prev => {
+                          const newMap = new Map(prev);
+                          newMap.delete(newMessage.id);
+                          return newMap;
+                      });
+                  }
+              }, 45 * 1000);
+              
+              setPendingBlocks(prev => new Map(prev).set(newMessage.id, timeoutId));
+          }
+      }
+  }, [user, isPrivateChat, toast]);
+
 
   useEffect(() => {
     const messagesRef = ref(db, chatId ? `private_chats/${chatId}/messages` : 'public_chat');
     
-    const handleNewMessages = (snapshot: any) => {
+    const listener = onValue(messagesRef, (snapshot) => {
       const data = snapshot.val();
-      if (data) {
-        const messageList: Message[] = Object.entries(data).map(([key, value]) => ({
-          id: key,
-          ...(value as Omit<Message, 'id'>),
-        })).sort((a, b) => a.timestamp - b.timestamp);
+      const newMessages: Message[] = data 
+          ? Object.entries(data).map(([key, value]) => ({ id: key, ...(value as Omit<Message, 'id'>) }))
+          : [];
+      
+      newMessages.sort((a, b) => a.timestamp - b.timestamp);
 
-        if (messages.length > 0 && messageList.length > messages.length) {
-            const lastMessage = messageList[messageList.length - 1];
-            if (lastMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
-                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-            }
-        }
-
-        setMessages(messageList);
-      } else {
-        setMessages([]);
+      if (newMessages.length > messages.length) {
+          const lastMessage = newMessages[newMessages.length - 1];
+          handleNewMessage(lastMessage, messages);
       }
-    };
 
-    onValue(messagesRef, handleNewMessages);
+      setMessages(newMessages);
+    });
 
     return () => {
-      off(messagesRef, 'value', handleNewMessages);
+      off(messagesRef, 'value', listener);
     };
-  }, [chatId, user?.username, messages.length]);
+  }, [chatId, messages, handleNewMessage]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -124,6 +156,17 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
   const confirmDelete = async () => {
     if (messageToDelete) {
+      // Check for and clear any pending block associated with this message
+      if (pendingBlocks.has(messageToDelete)) {
+          clearTimeout(pendingBlocks.get(messageToDelete));
+          setPendingBlocks(prev => {
+              const newMap = new Map(prev);
+              newMap.delete(messageToDelete);
+              return newMap;
+          });
+          toast({ title: "Potential block avoided.", description: "You deleted the message in time." });
+      }
+
       const path = chatId ? `private_chats/${chatId}/messages/${messageToDelete}` : `public_chat/${messageToDelete}`;
       await remove(ref(db, path));
       toast({ title: 'Message deleted.' });
@@ -210,7 +253,6 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     });
 
     if (containsBlockedWord) {
-        // Block after 5 seconds, but don't tell the user the time
         setTimeout(async () => {
             const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
             const snapshot = await get(userToBlockRef);
