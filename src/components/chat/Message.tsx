@@ -180,23 +180,29 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     const isPrivilegedUser = user.role === 'moderator' || user.role === 'developer';
     const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
 
-    if (isPrivilegedUser) {
-        // Privileged users can like multiple times
-        const updates: any = {};
-        updates['likes'] = increment(1);
-        updates[`likedBy/${user.username}`] = true; // Still mark them as a liker
-        await update(messageRef, updates);
-    } else {
-        // Regular users can only like once
-        if (hasLiked) return;
-        const updates: any = {};
-        updates['likes'] = increment(1);
-        updates[`likedBy/${user.username}`] = true;
-        await update(messageRef, updates);
+    if (!isPrivilegedUser && hasLiked) {
+        // Regular user has already liked, do nothing.
+        return;
     }
-    
-    setFireConfetti(false);
-    setTimeout(() => setFireConfetti(true), 10);
+
+    try {
+        const updates: any = {};
+        updates['likes'] = increment(1);
+        // Only mark that the user has liked if they are a regular user to enforce the one-like rule.
+        // Privileged users can like multiple times, so we don't track them this way.
+        if (!isPrivilegedUser) {
+            updates[`likedBy/${user.username}`] = true;
+        }
+        await update(messageRef, updates);
+
+        // Trigger confetti effect
+        setFireConfetti(false); // Reset to allow re-triggering
+        setTimeout(() => setFireConfetti(true), 10);
+
+    } catch (error) {
+        console.error("Error liking message:", error);
+        toast({ title: "Error", description: "Could not like the message.", variant: "destructive" });
+    }
   };
 
   const handleReaction = async (emoji: string) => {
@@ -366,3 +372,5 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
+    
