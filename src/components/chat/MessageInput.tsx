@@ -190,7 +190,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   
   const getPlaceholder = () => {
     if (isBlocked) return "You are blocked and cannot send messages.";
-    if (isSendingMedia) return "Enter your media URL (image, video, audio)...";
+    if (isSendingMedia) return "Enter your media URL...";
     return "Type your message...";
   }
 
@@ -208,15 +208,15 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             }
           }}
           placeholder={getPlaceholder()}
-          className={cn("pr-20 bg-background", isBlocked ? "pl-9 text-destructive placeholder:text-destructive/80" : "", "h-10 text-sm")}
+          className={cn("pr-20 bg-background", isBlocked ? "pl-9 text-destructive placeholder:text-destructive/80" : "", "h-9 text-xs")}
           disabled={isBlocked}
           rows={1}
         />
-        <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-8 w-8">
+        <div className="absolute top-1/2 right-1.5 -translate-y-1/2 flex gap-1">
+          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-7 w-7">
             {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8">
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-7 w-7">
             <Send className="h-4 w-4" />
           </Button>
         </div>

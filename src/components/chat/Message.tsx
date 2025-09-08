@@ -136,9 +136,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
   return (
-    <div className={cn('flex items-start gap-2 p-2 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
-      <div className="flex flex-col items-center w-14 flex-shrink-0">
-        <Avatar className="h-8 w-8 border-2 border-muted">
+    <div className={cn('flex items-start gap-2 p-1 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+      <div className="flex flex-col items-center w-12 flex-shrink-0">
+        <Avatar className="h-6 w-6 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
             <RoleIcon role={senderRole} />
@@ -146,7 +146,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         </Avatar>
         {!isSender && !isPrivateChat && (
              <div className="flex items-center gap-1 mt-1">
-                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
+                <span className={cn('text-[10px] font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
@@ -156,7 +156,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 
       <div className={cn('flex flex-col max-w-[75%]', isSender ? 'items-end' : 'items-start')}>
         <div className={cn(
-            'rounded-xl p-2 relative shadow-md', 
+            'rounded-lg p-1.5 relative shadow-md', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             {!isSender && isPrivateChat && (
@@ -167,10 +167,10 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
                 </div>
             )}
-            <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
+            <div className="text-xs">{message.text && parseAndRenderMessage(message.text)}</div>
             {hasMedia && <MediaContent url={message.imageUrl!} />}
         </div>
-        <span className="text-[10px] text-muted-foreground mt-1 px-1">
+        <span className="text-[9px] text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
         </span>
       </div>
