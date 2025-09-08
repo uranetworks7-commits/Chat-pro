@@ -195,9 +195,9 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   }
 
   return (
-    <div className="p-4 border-t bg-card/80">
+    <div className="p-2 border-t bg-card/80">
       <div className="relative">
-        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
+        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />}
         <Textarea
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
@@ -208,15 +208,16 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             }
           }}
           placeholder={getPlaceholder()}
-          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "h-12")}
+          className={cn("pr-20 bg-background", isBlocked ? "pl-9 text-destructive placeholder:text-destructive/80" : "", "h-10 text-sm")}
           disabled={isBlocked}
+          rows={1}
         />
-        <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={isBlocked}>
-            {isSendingImage ? <X className="h-5 w-5" /> : <ImagePlus className="h-5 w-5" />}
+        <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-1">
+          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={isBlocked} className="h-8 w-8">
+            {isSendingImage ? <X className="h-4 w-4" /> : <ImagePlus className="h-4 w-4" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked}>
-            <Send className="h-5 w-5" />
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8">
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>

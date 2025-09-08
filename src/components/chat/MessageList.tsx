@@ -35,9 +35,9 @@ interface MessageListProps {
 function WelcomeMessage({ otherUserName }: { otherUserName?: string }) {
     return (
         <div className="flex flex-col items-center justify-center h-full text-center p-8">
-            <MessageCircle className="w-16 h-16 text-muted-foreground/50 mb-4" />
-            <h2 className="text-2xl font-bold">Welcome to your private chat!</h2>
-            <p className="text-muted-foreground">
+            <MessageCircle className="w-12 h-12 text-muted-foreground/50 mb-4" />
+            <h2 className="text-xl font-bold">Welcome to your private chat!</h2>
+            <p className="text-muted-foreground text-sm">
                 You are now in a private conversation with <span className="font-semibold text-foreground">{otherUserName || '...'}</span>.
             </p>
             <p className="text-xs text-muted-foreground mt-2">Messages sent here are only visible to the two of you.</p>
@@ -222,13 +222,13 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   return (
     <>
       <ScrollArea className="flex-1" ref={scrollAreaRef}>
-        <div className="p-4 space-y-2">
+        <div className="p-2 space-y-1">
         <AnimatePresence>
           {messages.map((message) => (
             <motion.div
                 key={message.id}
                 layout
-                initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
                 transition={{ duration: 0.3, ease: "easeOut" }}

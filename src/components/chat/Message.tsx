@@ -111,9 +111,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
   return (
-    <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
-      <div className="flex flex-col items-center w-16 flex-shrink-0">
-        <Avatar className="h-10 w-10 border-2 border-muted">
+    <div className={cn('flex items-start gap-2 p-2 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+      <div className="flex flex-col items-center w-14 flex-shrink-0">
+        <Avatar className="h-8 w-8 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
             <RoleIcon role={senderRole} />
@@ -129,9 +129,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         )}
       </div>
 
-      <div className={cn('flex flex-col max-w-[70%]', isSender ? 'items-end' : 'items-start')}>
+      <div className={cn('flex flex-col max-w-[75%]', isSender ? 'items-end' : 'items-start')}>
         <div className={cn(
-            'rounded-xl p-3 relative shadow-md', 
+            'rounded-xl p-2 relative shadow-md', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
             {!isSender && isPrivateChat && (
@@ -143,9 +143,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 </div>
             )}
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
-            {showImage && <Image src={message.imageUrl!} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={300} height={200} />}
+            {showImage && <Image src={message.imageUrl!} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={250} height={150} />}
         </div>
-        <span className="text-xs text-muted-foreground mt-1 px-1">
+        <span className="text-[10px] text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
         </span>
       </div>
@@ -153,7 +153,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
        <div className="opacity-0 group-hover:opacity-100 transition-opacity self-center">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                    <Button variant="ghost" size="icon" className="h-6 w-6">
                         <MoreHorizontal className="h-4 w-4" />
                     </Button>
                 </DropdownMenuTrigger>

@@ -39,22 +39,22 @@ export default function Header() {
 
   return (
     <>
-      <header className="flex items-center justify-between p-4 border-b bg-card/80">
+      <header className="flex items-center justify-between p-2 border-b bg-card/80">
         <div className="flex items-center gap-2">
-           <div className="p-2 bg-primary rounded-full">
-            <Bell className="h-6 w-6 text-primary-foreground" />
+           <div className="p-1.5 bg-primary rounded-full">
+            <Bell className="h-5 w-5 text-primary-foreground" />
            </div>
-          <h1 className="text-2xl font-bold font-headline text-primary">Public Chat</h1>
+          <h1 className="text-xl font-bold font-headline text-primary">Public Chat</h1>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setProfileOpen(true)} className="relative">
-            <User className="h-6 w-6" />
-            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-card" />}
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="icon" onClick={() => setProfileOpen(true)} className="relative h-8 w-8">
+            <User className="h-5 w-5" />
+            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
             <span className="sr-only">Open Profile</span>
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => setFriendsOpen(true)} className="relative">
-            <Users className="h-6 w-6" />
-            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-card" />}
+          <Button variant="ghost" size="icon" onClick={() => setFriendsOpen(true)} className="relative h-8 w-8">
+            <Users className="h-5 w-5" />
+            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
             <span className="sr-only">Open Friends List</span>
           </Button>
         </div>
