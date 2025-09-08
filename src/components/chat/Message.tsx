@@ -181,79 +181,68 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   return (
     <>
     <Confetti fire={fireConfetti} />
-    <div className={cn('flex items-start gap-1 p-1 my-2 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
-      <div className="flex flex-col items-center w-16 flex-shrink-0">
+    <div className={cn('flex flex-col gap-1 p-1 my-2 rounded-lg transition-colors group', isSender ? 'items-end' : 'items-start')}>
+      <div className={cn('flex items-center gap-2', isSender ? 'flex-row-reverse' : 'flex-row')}>
         <Avatar className="h-6 w-6 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-        {!isPrivateChat && (
-            <div className="flex items-center gap-1 mt-1 w-full justify-center">
-                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
-                    {message.senderName}
-                </span>
-                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2 flex-shrink-0" />}
-            </div>
-        )}
+        <div className="flex items-center gap-1.5">
+            <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
+                {message.senderName}
+            </span>
+            {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
+        </div>
       </div>
 
-      <div className={cn('flex flex-col max-w-[75%]', isSender ? 'items-end' : 'items-start')}>
-        <div className={cn(
-            'rounded-lg p-2 relative shadow-md', 
-            isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
-        )}>
-            {!isSender && isPrivateChat && (
-                 <div className="flex items-center gap-1.5 mb-1">
-                    <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
-                        {message.senderName}
-                    </span>
-                    {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
-                </div>
-            )}
-            <div className="text-xs break-words">{message.text && parseAndRenderMessage(message.text)}</div>
-            {hasMedia && <MediaContent url={message.imageUrl!} />}
-             {showLikeButton && (
-                <div className="mt-2 flex items-center gap-2">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={handleLike}
-                        disabled={hasLiked && user?.role === 'user'}
-                        className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
-                    >
-                        <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
-                    </Button>
-                    {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
-                </div>
-            )}
-        </div>
-        <span className="text-[8px] text-muted-foreground mt-1 px-1">
-            {format(new Date(message.timestamp), 'p')}
-        </span>
+      <div className={cn('flex max-w-[85%] items-end gap-1', isSender ? 'flex-row-reverse' : 'flex-row')}>
+          <div className={cn(
+              'rounded-lg p-2 relative shadow-md', 
+              isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
+          )}>
+              <div className="text-xs break-words">{message.text && parseAndRenderMessage(message.text)}</div>
+              {hasMedia && <MediaContent url={message.imageUrl!} />}
+               {showLikeButton && (
+                  <div className="mt-2 flex items-center gap-2">
+                      <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={handleLike}
+                          disabled={hasLiked && user?.role === 'user'}
+                          className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
+                      >
+                          <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
+                      </Button>
+                      {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+                  </div>
+              )}
+          </div>
+          <div className="self-end">
+              <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <MoreHorizontal className="h-4 w-4 text-primary" />
+                      </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align={isSender ? "end" : "start"}>
+                  {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+                  {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
+                  {(canModerate || isSender) && <DropdownMenuSeparator />}
+                  {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
+                  {canModerate && !isSender && !isPrivateChat && (
+                      isSenderBlocked 
+                          ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
+                          : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>
+                  )}
+                  </DropdownMenuContent>
+              </DropdownMenu>
+          </div>
       </div>
-
-       <div className="self-center">
-            <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <MoreHorizontal className="h-4 w-4 text-primary" />
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align={isSender ? "end" : "start"}>
-                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
-                {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
-                {(canModerate || isSender) && <DropdownMenuSeparator />}
-                {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
-                {canModerate && !isSender && !isPrivateChat && (
-                    isSenderBlocked 
-                        ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
-                        : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>
-                )}
-                </DropdownMenuContent>
-            </DropdownMenu>
-        </div>
+      <span className={cn("text-[8px] text-muted-foreground mt-1 px-1", isSender ? 'mr-8' : 'ml-8')}>
+          {format(new Date(message.timestamp), 'p')}
+      </span>
     </div>
     </>
   );
