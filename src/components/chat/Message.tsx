@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -13,15 +13,22 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { RoleIcon } from './Icons';
 import { cn } from '@/lib/utils';
 import type { Message, UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, get, update, set } from 'firebase/database';
+import { ref, onValue, off, get, update, set, remove } from 'firebase/database';
 import AudioPlayer from './AudioPlayer';
 import Confetti from './Confetti';
+import { useLongPress } from 'react-use';
+
 
 interface MessageProps {
   message: Message;
@@ -30,6 +37,7 @@ interface MessageProps {
   onBlock: (userId: string) => void;
   onUnblock: (userId: string) => void;
   onSendFriendRequest: (userId: string) => void;
+  onReply: (message: Message) => void;
   isPrivateChat?: boolean;
 }
 
@@ -46,6 +54,8 @@ const messageBgStyles = {
     developer: 'bg-red-900/80 border border-red-700 shadow-[0_0_25px_5px_rgba(239,68,68,0.3)]',
     system: 'bg-purple-800/80 border border-purple-600',
 }
+
+const EMOJI_REACTIONS = ['❤️', '👍', '😂', '😢', '😠'];
 
 function parseAndRenderMessage(text: string) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
@@ -130,18 +140,26 @@ const MediaContent = ({ url }: { url: string }) => {
 };
 
 
-const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
+const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, onReply, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
   const [senderData, setSenderData] = useState<UserData | null>(null);
   const [fireConfetti, setFireConfetti] = useState(false);
+  const [showReactionPopup, setShowReactionPopup] = useState(false);
+
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
   const hasMedia = message.imageUrl && isValidHttpUrl(message.imageUrl);
-
   const showLikeButton = message.text && message.text.includes('#');
   const hasLiked = user ? message.likedBy && message.likedBy[user.username] : false;
 
+  const longPressProps = useLongPress(() => {
+    setShowReactionPopup(true);
+  }, {
+    threshold: 400,
+    captureEvent: true,
+    cancelOnMovement: true,
+  });
 
   useEffect(() => {
     if (canModerate && !isSender) {
@@ -176,6 +194,32 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     }
   };
 
+  const handleReaction = async (emoji: string) => {
+    if (!user) return;
+
+    const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
+    const reactionRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}/reactions/${emoji}` : `public_chat/${message.id}/reactions/${emoji}`);
+
+    const snapshot = await get(reactionRef);
+    const existingReactors: string[] = snapshot.val() || [];
+    
+    if (existingReactors.includes(user.username)) {
+        // User has already reacted with this emoji, so remove their reaction
+        const newReactors = existingReactors.filter(u => u !== user.username);
+        if (newReactors.length > 0) {
+            await set(reactionRef, newReactors);
+        } else {
+            // If no one is left, remove the emoji node
+            await remove(reactionRef);
+        }
+    } else {
+        // Add user's reaction
+        const newReactors = [...existingReactors, user.username];
+        await set(reactionRef, newReactors);
+    }
+    setShowReactionPopup(false);
+  }
+
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
     if (senderRole === 'system') {
@@ -194,12 +238,13 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const MessageOptions = () => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizontal className="h-4 w-4 text-primary" />
+            <Button variant="ghost" size="icon" className="h-7 w-7 opacity-50 group-hover:opacity-100 transition-opacity">
+                <MoreHorizontal className="h-4 w-4" />
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align={isSender ? "start" : "end"}>
+        <DropdownMenuContent align={isSender ? "end" : "start"}>
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+        {!isSender && <DropdownMenuItem onClick={() => onReply(message)}><CornerUpLeft className="mr-2 h-4 w-4" /><span>Reply</span></DropdownMenuItem>}
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
         {(canModerate || isSender) && <DropdownMenuSeparator />}
         {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
@@ -212,6 +257,19 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     </DropdownMenu>
   );
 
+  const ReplyPreview = ({ replyTo }: { replyTo: Message['replyTo']}) => {
+    if (!replyTo) return null;
+    return (
+        <div className="flex items-center gap-2 p-2 rounded-t-lg bg-black/20 text-xs text-muted-foreground border-b border-white/10">
+            <CornerUpLeft className="h-3 w-3 flex-shrink-0" />
+            <div className="flex-1 overflow-hidden">
+                <p className="font-bold text-foreground truncate">{replyTo.senderName}</p>
+                <p className="truncate">{replyTo.text || (replyTo.imageUrl ? 'Media' : '...')}</p>
+            </div>
+        </div>
+    );
+  };
+
   return (
     <>
     <Confetti fire={fireConfetti} />
@@ -223,49 +281,80 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-        <div className="flex items-center gap-2">
-            {isSender && <MessageOptions />}
+        <div className="flex flex-col" style={{ alignItems: isSender ? 'flex-end' : 'flex-start'}}>
             <div className="flex items-center gap-1.5">
                 <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
                 {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
             </div>
-            {!isSender && <MessageOptions />}
+            
+            <Popover open={showReactionPopup} onOpenChange={setShowReactionPopup}>
+                <PopoverTrigger asChild>
+                    <div 
+                        {...longPressProps}
+                        className={cn(
+                            'max-w-md w-fit rounded-lg p-3 relative shadow-md mt-1', 
+                            isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
+                        )}
+                    >
+                        <ReplyPreview replyTo={message.replyTo} />
+                        <div className={cn("text-base break-words p-2", message.replyTo ? 'pt-2' : '')}>
+                            {message.text && parseAndRenderMessage(message.text)}
+                        </div>
+                        
+                        {hasMedia && <div className="p-2"><MediaContent url={message.imageUrl!} /></div>}
+                        
+                        {showLikeButton && (
+                            <div className="mt-2 flex items-center gap-2">
+                                <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    onClick={handleLike}
+                                    disabled={hasLiked && user?.role === 'user'}
+                                    className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
+                                >
+                                    <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
+                                </Button>
+                                {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+                            </div>
+                        )}
+
+                        {message.reactions && Object.keys(message.reactions).length > 0 && (
+                            <div className="flex gap-1 flex-wrap mt-1">
+                                {Object.entries(message.reactions).map(([emoji, users]) => (
+                                    <div key={emoji} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-background/20 text-xs">
+                                        <span>{emoji}</span>
+                                        <span className="font-bold">{users.length}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                        
+                        <div className={cn("text-xs text-muted-foreground mt-2", isSender ? 'text-right' : 'text-left')}>
+                            {format(new Date(message.timestamp), 'p')}
+                        </div>
+                    </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-1 rounded-full">
+                    <div className="flex gap-1">
+                        {EMOJI_REACTIONS.map(emoji => (
+                            <Button key={emoji} variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
+                                {emoji}
+                            </Button>
+                        ))}
+                    </div>
+                </PopoverContent>
+            </Popover>
+
+        </div>
+        <div className="self-start pt-6">
+            <MessageOptions />
         </div>
       </div>
-
-      <div className={cn('max-w-[85%]', isSender ? 'self-end' : 'self-start ml-11')}>
-          <div className={cn(
-              'rounded-lg p-3 relative shadow-md', 
-              isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
-          )}>
-              <div className="text-base break-words">{message.text && parseAndRenderMessage(message.text)}</div>
-              {hasMedia && <MediaContent url={message.imageUrl!} />}
-               {showLikeButton && (
-                  <div className="mt-2 flex items-center gap-2">
-                      <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={handleLike}
-                          disabled={hasLiked && user?.role === 'user'}
-                          className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
-                      >
-                          <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
-                      </Button>
-                      {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
-                  </div>
-              )}
-          </div>
-      </div>
-      <span className={cn("text-xs text-muted-foreground mt-1 px-1", isSender ? 'self-end' : 'self-start ml-11')}>
-          {format(new Date(message.timestamp), 'p')}
-      </span>
     </div>
     </>
   );
 };
 
 export default memo(MessageComponent);
-
-    

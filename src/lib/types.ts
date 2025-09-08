@@ -23,6 +23,13 @@ export interface Message {
   timestamp: number;
   likes?: number;
   likedBy?: { [key: string]: boolean };
+  reactions?: { [emoji: string]: string[] }; // emoji: [userId1, userId2, ...]
+  replyTo?: {
+    messageId: string;
+    senderName: string;
+    text?: string;
+    imageUrl?: string;
+  };
 }
 
 export interface PrivateChatMetadata {

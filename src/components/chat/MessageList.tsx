@@ -25,6 +25,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { MessageCircle } from 'lucide-react';
+import MessageInput from './MessageInput';
+import TypingIndicator from './TypingIndicator';
 
 interface MessageListProps {
   chatId?: string; // For private chats
@@ -58,6 +60,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const userInteractedRef = useRef(false);
   const [pendingBlocks, setPendingBlocks] = useState<Map<string, NodeJS.Timeout>>(new Map());
   const [messageToWarn, setMessageToWarn] = useState<Message | null>(null);
+  const [replyTo, setReplyTo] = useState<Message | null>(null);
 
   const handleNewMessage = useCallback((newMessage: Message) => {
     if (newMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
@@ -179,6 +182,10 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     setMessageToReport(message);
     setReportDialogOpen(true);
   };
+
+  const handleReply = (message: Message) => {
+    setReplyTo(message);
+  }
   
   const handleBlock = async (userIdToBlock: string) => {
     const userToBlockRef = ref(db, `users/${userIdToBlock}`);
@@ -266,9 +273,19 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     setReportDialogOpen(false);
     setMessageToReport(null);
   };
+
+  const cancelReply = () => {
+    setReplyTo(null);
+  };
   
   if (isPrivateChat && messages.length === 0) {
-    return <WelcomeMessage otherUserName={otherUserName} />;
+    return (
+        <div className="flex-1 flex flex-col min-h-0">
+            <WelcomeMessage otherUserName={otherUserName} />
+            <TypingIndicator chatId={chatId} />
+            <MessageInput chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
+        </div>
+    );
   }
 
   return (
@@ -293,6 +310,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
                     onBlock={handleBlock}
                     onUnblock={handleUnblock}
                     onSendFriendRequest={handleSendFriendRequest}
+                    onReply={handleReply}
                     isPrivateChat={isPrivateChat}
                 />
             </motion.div>
@@ -300,6 +318,9 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
           </AnimatePresence>
         </div>
       </ScrollArea>
+       <TypingIndicator chatId={chatId} />
+       <MessageInput chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
+
       {messageToReport && (
         <ReportDialog
           open={isReportDialogOpen}
@@ -324,5 +345,3 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     </>
   );
 }
-
-    

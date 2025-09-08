@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X, MicOff } from 'lucide-react';
+import { Send, Paperclip, X, MicOff, CornerUpLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
@@ -10,14 +10,15 @@ import { db } from '@/lib/firebase';
 import { ref, push, set, serverTimestamp, onDisconnect, remove, get, update } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import type { UserData } from '@/lib/types';
-
+import type { UserData, Message } from '@/lib/types';
 
 interface MessageInputProps {
   chatId?: string; // Optional: for private chats
+  replyTo?: Message | null;
+  onCancelReply: () => void;
 }
 
-export default function MessageInput({ chatId }: MessageInputProps) {
+export default function MessageInput({ chatId, replyTo, onCancelReply }: MessageInputProps) {
   const [text, setText] = useState('');
   const [isSendingMedia, setIsSendingMedia] = useState(false);
   const { user } = useUser();
@@ -82,8 +83,17 @@ export default function MessageInput({ chatId }: MessageInputProps) {
         timestamp: serverTimestamp(),
       };
 
+      if (replyTo) {
+        messagePayload.replyTo = {
+            messageId: replyTo.id,
+            senderName: replyTo.senderName,
+            text: replyTo.text,
+            imageUrl: replyTo.imageUrl
+        };
+      }
+
       if (isSendingMedia) {
-        messagePayload.imageUrl = messageText; // imageUrl is now a generic mediaUrl
+        messagePayload.imageUrl = messageText;
       } else {
         messagePayload.text = messageText;
       }
@@ -91,7 +101,6 @@ export default function MessageInput({ chatId }: MessageInputProps) {
       await push(messagesRef, messagePayload);
       
       if (chatId) {
-        // Wrap metadata update in its own try/catch to suppress errors
         try {
             const chatMetadataRef = ref(db, `private_chats/${chatId}/metadata`);
             const participantIds = chatId.split('_');
@@ -127,13 +136,14 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             }
         } catch (metadataError) {
             console.error('Failed to update private chat metadata, but message was sent:', metadataError);
-            // This catch block is intentionally left empty to suppress the toast.
         }
       }
 
       setText('');
       if(isSendingMedia) setIsSendingMedia(false);
       handleTyping(false);
+      if (replyTo) onCancelReply();
+
 
     } catch (error) {
       console.error('Error sending message:', error);
@@ -152,12 +162,27 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   
   const getPlaceholder = () => {
     if (isBlocked) return "You are blocked and cannot send messages.";
+    if (replyTo) return `Replying to ${replyTo.senderName}...`;
     if (isSendingMedia) return "Enter your media URL...";
     return "Type your message...";
   }
 
   return (
     <div className="p-3 border-t bg-card/80">
+      {replyTo && (
+        <div className="flex items-center justify-between p-2 rounded-t-md bg-secondary text-sm mb-1">
+            <div className="flex items-center gap-2 overflow-hidden">
+                <CornerUpLeft className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <div className="flex-1 overflow-hidden">
+                    <p className="font-bold truncate">{replyTo.senderName}</p>
+                    <p className="text-muted-foreground truncate">{replyTo.text || "Media"}</p>
+                </div>
+            </div>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onCancelReply}>
+                <X className="h-4 w-4" />
+            </Button>
+        </div>
+      )}
       <div className="relative">
         {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
         <Textarea
@@ -186,5 +211,3 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     </div>
   );
 }
-
-    

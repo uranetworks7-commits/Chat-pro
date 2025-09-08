@@ -11,8 +11,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
 import MessageList from '@/components/chat/MessageList';
-import MessageInput from '@/components/chat/MessageInput';
-import TypingIndicator from '@/components/chat/TypingIndicator';
 import type { UserData } from '@/lib/types';
 import SplashScreen from '@/components/chat/SplashScreen';
 import { useBackground } from '@/context/BackgroundContext';
@@ -106,12 +104,8 @@ export default function PrivateChatPage() {
             <ChatHeader otherUser={otherUser} />
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
-                <TypingIndicator chatId={chatId} />
-                <MessageInput chatId={chatId} />
             </div>
         </div>
     </main>
   );
 }
-
-    
