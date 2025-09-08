@@ -193,7 +193,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6">
-                        <MoreHorizontal className="h-4 w-4" />
+                        <MoreHorizontal className="h-4 w-4 text-primary" />
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isSender ? "end" : "start"}>
