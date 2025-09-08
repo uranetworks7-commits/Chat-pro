@@ -26,6 +26,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
   const typingStatusRef = user ? ref(db, `typing/${chatId || 'public'}/${user.username}`) : null;
+  const abuseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
@@ -40,6 +41,33 @@ export default function MessageInput({ chatId }: MessageInputProps) {
         }
     }
   }, [typingStatusRef]);
+
+  useEffect(() => {
+    // Cleanup timeout on unmount
+    return () => {
+      if (abuseTimeoutRef.current) {
+        clearTimeout(abuseTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleTextChange = (newText: string) => {
+      setText(newText);
+      if (!isSendingImage) {
+        handleTyping(true);
+      }
+
+      // If user clears the input, cancel the pending block
+      if (newText.trim() === '' && abuseTimeoutRef.current) {
+          clearTimeout(abuseTimeoutRef.current);
+          abuseTimeoutRef.current = null;
+          toast({
+              title: "Block Canceled",
+              description: "The pending block has been canceled as the message was cleared.",
+              className: "bg-green-500 text-white"
+          });
+      }
+  };
 
   const handleTyping = (isTyping: boolean) => {
     if (!user || !typingStatusRef || isSendingImage) return;
@@ -68,28 +96,25 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     }
 
     const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
-    if (containsAbusiveWord) {
+    if (containsAbusiveWord && !abuseTimeoutRef.current) {
         toast({
             title: "Warning: Inappropriate Language",
-            description: "Your message contains blocked words. You will be blocked in 45 seconds if you send this.",
+            description: "Your message contains blocked words. You will be blocked in 45 seconds. Clear the message to cancel.",
             variant: "destructive",
             duration: 10000,
         });
 
-        setTimeout(() => {
+        abuseTimeoutRef.current = setTimeout(() => {
              if (user) {
-                blockUser(user, `Raj reported... Ura Firing Squad Blocked ${user.customName}.`);
+                blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
                 toast({
                     title: "You have been blocked",
                     description: "Your account has been blocked for 30 minutes due to inappropriate language.",
                     variant: "destructive",
                 });
              }
+             abuseTimeoutRef.current = null;
         }, 45000);
-        
-        setText('');
-        handleTyping(false);
-        // We still send the message but the user will be blocked after the timeout.
     }
 
     try {
@@ -175,12 +200,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
         {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
         <Textarea
           value={text}
-          onChange={(e) => {
-            setText(e.target.value);
-            if (!isSendingImage) {
-              handleTyping(true);
-            }
-          }}
+          onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();

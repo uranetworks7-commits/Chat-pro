@@ -125,10 +125,10 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const handleBlock = async (userIdToBlock: string) => {
     const userToBlockRef = ref(db, `users/${userIdToBlock}`);
     const snapshot = await get(userToBlockRef);
-    if (snapshot.exists()) {
+    if (snapshot.exists() && user) {
         const userToBlockData = snapshot.val() as UserData
         const userToBlock = { ...userToBlockData, username: userIdToBlock };
-        await blockUser(userToBlock, `A moderator has blocked ${userToBlock.customName}.`);
+        await blockUser(userToBlock, `${user.customName} has blocked ${userToBlock.customName}.`);
         toast({
             title: "User Blocked",
             description: `${userToBlock.customName} has been blocked for 30 minutes.`,
@@ -191,8 +191,8 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
     if (containsBlockedWord) {
         toast({
-            title: 'Thank you for your feedback! 📢',
-            description: 'The user will be blocked in 5 seconds and the report is under review.',
+            title: 'Report Successfully!',
+            description: `This Toxic User will be Blocked in 5 seconds.`,
             duration: 5000,
         });
 
@@ -201,7 +201,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
             const snapshot = await get(userToBlockRef);
             if (snapshot.exists()) {
                 const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
-                await blockUser(userToBlock, `Raj reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
+                await blockUser(userToBlock, `${user.customName} reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
             }
         }, 5000);
     } else {
