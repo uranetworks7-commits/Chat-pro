@@ -3,7 +3,7 @@
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import type { UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, set, get } from 'firebase/database';
+import { ref, onValue, off, get } from 'firebase/database';
 
 interface UserContextType {
   user: UserData | null;
@@ -30,7 +30,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
           const snapshot = await get(dbUserRef);
 
           if (snapshot.exists()) {
-            const latestUserData = snapshot.val();
+            const latestUserData = snapshot.val() as UserData;
             setUserState(latestUserData);
             localStorage.setItem('publicchat_user', JSON.stringify(latestUserData));
 
@@ -69,13 +69,25 @@ export function UserProvider({ children }: { children: ReactNode }) {
     setUserState(userData);
     if (userData) {
       localStorage.setItem('publicchat_user', JSON.stringify(userData));
+      const userRef = ref(db, `users/${userData.username}`);
+      onValue(userRef, (snapshot) => {
+        const updatedUser = snapshot.val();
+        if (updatedUser) {
+          setUserState(updatedUser);
+          localStorage.setItem('publicchat_user', JSON.stringify(updatedUser));
+        }
+      });
     } else {
       // on logout, remove from local storage
       const storedUserJson = localStorage.getItem('publicchat_user');
       if (storedUserJson) {
-        const storedUser: UserData = JSON.parse(storedUserJson);
-        const userRef = ref(db, `users/${storedUser.username}`);
-        off(userRef); // Turn off listener
+        try {
+            const storedUser: UserData = JSON.parse(storedUserJson);
+            const userRef = ref(db, `users/${storedUser.username}`);
+            off(userRef); // Turn off listener
+        } catch(e) {
+            console.error("Error cleaning up user listener", e)
+        }
       }
       localStorage.removeItem('publicchat_user');
     }

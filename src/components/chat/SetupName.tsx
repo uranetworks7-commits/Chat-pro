@@ -43,7 +43,7 @@ export default function SetupName() {
                 username: username.trim(),
                 customName: customName.trim(),
                 role: 'user',
-                profileImageUrl: '',
+                profileImageUrl: `https://avatar.vercel.sh/${username.trim()}.png`,
                 friends: {},
                 friendRequests: {},
                 isBlocked: false,
