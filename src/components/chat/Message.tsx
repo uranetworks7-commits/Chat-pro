@@ -24,7 +24,7 @@ import { RoleIcon } from './Icons';
 import { cn } from '@/lib/utils';
 import type { Message, UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, get, update, set, remove } from 'firebase/database';
+import { ref, onValue, off, get, update, set, remove, increment } from 'firebase/database';
 import AudioPlayer from './AudioPlayer';
 import Confetti from './Confetti';
 import { useLongPress } from 'react-use';
@@ -178,24 +178,25 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const handleLike = async () => {
     if (!user) return;
     const isPrivilegedUser = user.role === 'moderator' || user.role === 'developer';
-
-    if (hasLiked && !isPrivilegedUser) return; // Regular users can't unlike or re-like
-
     const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
-    
-    const newLikes = (message.likes || 0) + 1;
-    const newLikedBy = { ...(message.likedBy || {}), [user.username]: true };
 
-    try {
-        await update(messageRef, {
-            likes: newLikes,
-            likedBy: newLikedBy,
-        });
-        setFireConfetti(false); // Reset to allow re-triggering
-        setTimeout(() => setFireConfetti(true), 10);
-    } catch (error) {
-        console.error("Failed to like message:", error);
+    if (isPrivilegedUser) {
+        // Privileged users can like multiple times
+        const updates: any = {};
+        updates['likes'] = increment(1);
+        updates[`likedBy/${user.username}`] = true; // Still mark them as a liker
+        await update(messageRef, updates);
+    } else {
+        // Regular users can only like once
+        if (hasLiked) return;
+        const updates: any = {};
+        updates['likes'] = increment(1);
+        updates[`likedBy/${user.username}`] = true;
+        await update(messageRef, updates);
     }
+    
+    setFireConfetti(false);
+    setTimeout(() => setFireConfetti(true), 10);
   };
 
   const handleReaction = async (emoji: string) => {

@@ -185,10 +185,6 @@ export default function ProfilePage() {
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}><ArrowLeft /></Button>
                 <h1 className="text-xl font-semibold">Profile</h1>
             </div>
-            <Button onClick={handleLogout} variant="destructive" size="sm">
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-            </Button>
         </header>
         <ScrollArea className="flex-1">
             <div className="py-6 flex flex-col items-center">
@@ -201,6 +197,10 @@ export default function ProfilePage() {
               <h2 className="mt-4 text-2xl font-bold font-headline">{user.customName}</h2>
               <p className="text-sm text-muted-foreground">@{user.username}</p>
               <p className="mt-1 text-sm capitalize inline-flex items-center gap-1.5"><RoleIcon role={user.role} className="h-4 w-4" />{user.role}</p>
+              <Button onClick={handleLogout} variant="destructive" size="sm" className="mt-4">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+              </Button>
             </div>
             <div className="px-4">
               <Separator />
@@ -281,5 +281,3 @@ export default function ProfilePage() {
     </main>
   );
 }
-
-    
