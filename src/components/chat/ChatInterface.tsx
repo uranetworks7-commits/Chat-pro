@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 export default function ChatInterface() {
   const { background } = useBackground();
   return (
-    <div className="h-[100vh] w-full max-w-4xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border mx-auto">
+    <div className="h-[100vh] w-full max-w-6xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border mx-auto">
       <Header />
       <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
         <MessageList isPrivateChat={false} />
