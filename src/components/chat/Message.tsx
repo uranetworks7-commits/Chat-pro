@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft, Clipboard } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -28,6 +28,7 @@ import { ref, onValue, off, get, update, set, remove } from 'firebase/database';
 import AudioPlayer from './AudioPlayer';
 import Confetti from './Confetti';
 import { useLongPress } from 'react-use';
+import { useToast } from '@/hooks/use-toast';
 
 
 interface MessageProps {
@@ -142,6 +143,7 @@ const MediaContent = ({ url }: { url: string }) => {
 
 const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, onReply, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
+  const { toast } = useToast();
   const [senderData, setSenderData] = useState<UserData | null>(null);
   const [fireConfetti, setFireConfetti] = useState(false);
   const [showReactionPopup, setShowReactionPopup] = useState(false);
@@ -197,8 +199,8 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const handleReaction = async (emoji: string) => {
     if (!user) return;
 
-    const messageRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}` : `public_chat/${message.id}`);
-    const reactionRef = ref(db, isPrivateChat ? `private_chats/${message.id.split('_')[0]}/messages/${message.id}/reactions/${emoji}` : `public_chat/${message.id}/reactions/${emoji}`);
+    const messageRef = isPrivateChat ? `private_chats/${chatId}/messages/${message.id}` : `public_chat/${message.id}`;
+    const reactionRef = ref(db, `${messageRef}/reactions/${emoji}`);
 
     const snapshot = await get(reactionRef);
     const existingReactors: string[] = snapshot.val() || [];
@@ -220,7 +222,18 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     setShowReactionPopup(false);
   }
 
+  const handleCopy = async () => {
+      if (!message.text) return;
+      try {
+        await navigator.clipboard.writeText(message.text);
+        toast({ title: 'Copied to clipboard!' });
+      } catch (err) {
+        toast({ title: 'Failed to copy', variant: 'destructive' });
+      }
+  }
+
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
+  const chatId = isPrivateChat ? message.id.split('_chat_')[0] : 'public';
 
     if (senderRole === 'system') {
         return (
@@ -243,6 +256,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={isSender ? "end" : "start"}>
+        {message.text && <DropdownMenuItem onClick={handleCopy}><Clipboard className="mr-2 h-4 w-4" /><span>Copy Text</span></DropdownMenuItem>}
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
         {!isSender && <DropdownMenuItem onClick={() => onReply(message)}><CornerUpLeft className="mr-2 h-4 w-4" /><span>Reply</span></DropdownMenuItem>}
         {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
@@ -358,3 +372,4 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 
 export default memo(MessageComponent);
 
+    
