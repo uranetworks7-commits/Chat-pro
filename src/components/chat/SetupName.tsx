@@ -53,7 +53,7 @@ export default function SetupName() {
       username,
       customName,
       role,
-      profileImageUrl: `https://i.pravatar.cc/150?u=${username}`,
+      profileImageUrl: '', // Set to empty string for default icon
       friends: {},
       friendRequests: {},
       isBlocked: false,
