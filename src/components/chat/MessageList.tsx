@@ -146,7 +146,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
         await blockUser(userToBlock, `${user.customName} has blocked ${userToBlock.customName}.`);
         toast({
             title: "User Blocked",
-            description: `${userToBlock.customName} has been blocked for 30 minutes.`,
+            description: `${userToBlock.customName} has been blocked.`,
         });
     }
   }
@@ -203,27 +203,19 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
     const messageContent = (messageToReport.text || '').toLowerCase();
     const containsBlockedWord = blockedWords.some(word => messageContent.includes(word.toLowerCase()));
+    
+    toast({
+        title: 'Thank you for reporting.',
+        description: 'This action is under review.',
+    });
 
     if (containsBlockedWord) {
-        toast({
-            title: 'Report Successfully!',
-            description: `This Toxic User will be Blocked in 5 seconds.`,
-            duration: 5000,
-        });
-
-        setTimeout(async () => {
-            const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
-            const snapshot = await get(userToBlockRef);
-            if (snapshot.exists()) {
-                const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
-                await blockUser(userToBlock, `${user.customName} reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
-            }
-        }, 5000);
-    } else {
-        toast({
-            title: 'Thank you for reporting.',
-            description: 'This action is under review.',
-        });
+        const userToBlockRef = ref(db, `users/${messageToReport.senderId}`);
+        const snapshot = await get(userToBlockRef);
+        if (snapshot.exists()) {
+            const userToBlock = { ...snapshot.val(), username: messageToReport.senderId } as UserData;
+            await blockUser(userToBlock, `${user.customName} reported... Ura Firing Squad Blocked ${messageToReport.senderName}.`);
+        }
     }
 
     setReportDialogOpen(false);
@@ -287,5 +279,3 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     </>
   );
 }
-
-    

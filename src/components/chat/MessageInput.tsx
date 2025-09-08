@@ -26,7 +26,6 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
   const typingStatusRef = user ? ref(db, `typing/${chatId || 'public'}/${user.username}`) : null;
-  const abuseTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
@@ -42,30 +41,10 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     }
   }, [typingStatusRef]);
 
-  useEffect(() => {
-    // Cleanup timeout on unmount
-    return () => {
-      if (abuseTimeoutRef.current) {
-        clearTimeout(abuseTimeoutRef.current);
-      }
-    };
-  }, []);
-
   const handleTextChange = (newText: string) => {
       setText(newText);
       if (!isSendingMedia) {
         handleTyping(true);
-      }
-
-      // If user clears the input, cancel the pending block
-      if (newText.trim() === '' && abuseTimeoutRef.current) {
-          clearTimeout(abuseTimeoutRef.current);
-          abuseTimeoutRef.current = null;
-          toast({
-              title: "Block Canceled",
-              description: "The pending block has been canceled as the message was cleared.",
-              className: "bg-green-500 text-white"
-          });
       }
   };
 
@@ -89,32 +68,21 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     if (isBlocked) {
         toast({
             title: "You are blocked",
-            description: `You cannot send messages for another ${Math.ceil((user.blockExpires! - Date.now()) / 60000)} minutes.`,
+            description: `You cannot send messages at this time.`,
             variant: "destructive",
         });
         return;
     }
 
     const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
-    if (containsAbusiveWord && !abuseTimeoutRef.current) {
+    if (containsAbusiveWord) {
         toast({
             title: "Warning: Inappropriate Language",
-            description: "Your message contains blocked words. You will be blocked in 45 seconds. Clear the message to cancel.",
+            description: "Your message contains blocked words. Further violations may result in a ban.",
             variant: "destructive",
             duration: 10000,
         });
-
-        abuseTimeoutRef.current = setTimeout(() => {
-             if (user) {
-                blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
-                toast({
-                    title: "You have been blocked",
-                    description: "Your account has been blocked for 30 minutes due to inappropriate language.",
-                    variant: "destructive",
-                });
-             }
-             abuseTimeoutRef.current = null;
-        }, 45000);
+        blockUser(user, `URA Firing Squad Blocked ${user.customName}.`);
     }
 
     try {
