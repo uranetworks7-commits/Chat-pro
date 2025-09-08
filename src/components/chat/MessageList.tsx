@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useRef } from 'react';
@@ -26,9 +27,10 @@ import {
 
 interface MessageListProps {
   chatId?: string; // For private chats
+  isPrivateChat?: boolean;
 }
 
-export default function MessageList({ chatId }: MessageListProps) {
+export default function MessageList({ chatId, isPrivateChat }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const { user } = useUser();
   const { toast } = useToast();
@@ -199,7 +201,7 @@ export default function MessageList({ chatId }: MessageListProps) {
                     onDelete={handleDeleteRequest}
                     onBlock={(userId) => handleBlock(userId, message.senderName)}
                     onSendFriendRequest={handleSendFriendRequest}
-                    isPrivateChat={!!chatId}
+                    isPrivateChat={isPrivateChat}
                 />
             </motion.div>
           ))}

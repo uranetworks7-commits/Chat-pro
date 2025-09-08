@@ -74,6 +74,16 @@ export default function PrivateChatPage() {
 
   }, [chatId, user]);
 
+  useEffect(() => {
+    if (user && otherUser) {
+      document.title = `Chat between ${user.customName} and ${otherUser.customName}`;
+    }
+    // Cleanup function to reset title
+    return () => {
+        document.title = 'Public Chat';
+    };
+  }, [user, otherUser]);
+
 
   if (loading) {
     return <SplashScreen />;
@@ -90,7 +100,7 @@ export default function PrivateChatPage() {
             <ChatHeader otherUser={otherUser} />
             <div className="flex-1 flex flex-col chat-bg overflow-hidden">
                 <div className="flex-1 flex flex-col min-h-0">
-                    <MessageList chatId={chatId} />
+                    <MessageList chatId={chatId} isPrivateChat={true} />
                     <TypingIndicator chatId={chatId} />
                 </div>
             </div>
@@ -99,3 +109,4 @@ export default function PrivateChatPage() {
     </main>
   );
 }
+

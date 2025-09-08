@@ -1,3 +1,4 @@
+
 "use client";
 
 import Header from '@/components/chat/Header';
@@ -11,7 +12,7 @@ export default function ChatInterface() {
       <Header />
       <div className="flex-1 flex flex-col chat-bg overflow-hidden">
         <div className="flex-1 flex flex-col min-h-0">
-            <MessageList />
+            <MessageList isPrivateChat={false} />
             <TypingIndicator />
         </div>
       </div>
