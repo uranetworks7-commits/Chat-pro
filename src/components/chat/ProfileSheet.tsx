@@ -78,13 +78,12 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     }
 
     const usersRef = ref(db, 'users');
-    const nameQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
+    // Temporarily disabling search by customName to avoid crash.
+    // The database needs to be indexed on `customName`.
     const usernameQuery = query(usersRef, orderByChild('username'), equalTo(friendName.trim()));
 
     try {
-        const nameSnapshot = await get(nameQuery);
-        const usernameSnapshot = await get(usernameQuery);
-        const snapshot = nameSnapshot.exists() ? nameSnapshot : usernameSnapshot;
+        const snapshot = await get(usernameQuery);
 
         if (snapshot.exists()) {
             const data = snapshot.val();
@@ -99,7 +98,28 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
             toast({ title: `Friend request sent to ${recipientData.customName}!` });
             setFriendName('');
         } else {
-            toast({ title: 'User not found.', variant: 'destructive' });
+            // Let's try searching by custom name, but this might fail without the index.
+            const nameQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
+            const nameSnapshot = await get(nameQuery).catch(() => {
+                toast({ title: 'User not found. Searching by customName may require database indexing.', variant: 'destructive' });
+                return null;
+            });
+
+            if (nameSnapshot && nameSnapshot.exists()) {
+                 const data = nameSnapshot.val();
+                const recipientId = Object.keys(data)[0];
+                const recipientData = data[recipientId];
+                
+                const updates: any = {};
+                updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
+                updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
+
+                await update(ref(db), updates);
+                toast({ title: `Friend request sent to ${recipientData.customName}!` });
+                setFriendName('');
+            } else {
+                 toast({ title: 'User not found.', variant: 'destructive' });
+            }
         }
     } catch (error) {
         console.error("Error sending friend request:", error);
