@@ -20,6 +20,7 @@ import { cn } from '@/lib/utils';
 import type { Message, UserData } from '@/lib/types';
 import { db } from '@/lib/firebase';
 import { ref, onValue, off, get } from 'firebase/database';
+import AudioPlayer from './AudioPlayer';
 
 interface MessageProps {
   message: Message;
@@ -69,12 +70,11 @@ function parseAndRenderMessage(text: string) {
                 Icon = Play;
                 variant = "destructive";
             } else if (mediaExtensions.audio.includes(extension!)) {
-                buttonText = "Play Audio";
-                Icon = Play;
-                variant = "default";
+                // Audio is handled by MediaContent with the new AudioPlayer,
+                // so we don't render a button for them.
+                return null;
             } else if (mediaExtensions.image.includes(extension!)) {
-                // Images are handled by MediaContent, so we don't render a button for them.
-                // We'll just render the raw URL which will be hidden.
+                // Images are also handled by MediaContent.
                 return null;
             }
         } catch (e) {
@@ -82,7 +82,7 @@ function parseAndRenderMessage(text: string) {
         }
   
         return (
-          <Button key={index} asChild variant={variant} size="sm" className="my-2 h-auto py-2">
+          <Button key={index} asChild variant={variant} size="sm" className="my-2 h-auto py-2 text-xs">
             <a href={part} target="_blank" rel="noopener noreferrer">
               <Icon className="mr-2 h-4 w-4" />
               {buttonText}
@@ -123,7 +123,7 @@ const MediaContent = ({ url }: { url: string }) => {
         return <video src={url} controls className="mt-2 rounded-lg max-w-xs" />;
     }
     if (mediaType === 'audio') {
-        return <audio src={url} controls className="mt-2 w-full max-w-xs" />;
+        return <AudioPlayer url={url} />;
     }
     return null;
 };
@@ -216,5 +216,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
-
-    
