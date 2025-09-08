@@ -83,7 +83,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
       const messagePayload: any = {
         senderId: user.username,
         senderName: user.customName,
-        senderProfileUrl: user.profileImageUrl,
+        senderProfileUrl: user.profileImageUrl || '',
         role: user.role,
         timestamp: serverTimestamp(),
       };
