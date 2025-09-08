@@ -90,7 +90,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     if (messageToWarn && messageToWarn.senderId === user?.username) {
         toast({
             title: "Inappropriate Language Detected",
-            description: "Please delete the message within 45 seconds to avoid a block.",
+            description: "Please delete it. You may be blocked!",
             variant: "destructive",
         });
     }
