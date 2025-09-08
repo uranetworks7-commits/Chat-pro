@@ -70,6 +70,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const [pendingBlocks, setPendingBlocks] = useState<Map<string, NodeJS.Timeout>>(new Map());
   const [messageToWarn, setMessageToWarn] = useState<Message | null>(null);
   const [replyTo, setReplyTo] = useState<Message | null>(null);
+  const prevMessagesRef = useRef<Message[]>([]);
 
   const handleNewMessage = useCallback((newMessage: Message) => {
     if (newMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
@@ -81,14 +82,23 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
         const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
         if (containsAbusiveWord) {
           setMessageToWarn(newMessage);
-          toast({
-              title: "Inappropriate Language Detected",
-              description: "Please delete the message within 45 seconds to avoid a block.",
-              variant: "destructive",
-          });
         }
     }
-  }, [user, isPrivateChat, toast]);
+  }, [user, isPrivateChat]);
+
+  useEffect(() => {
+    if (messageToWarn && messageToWarn.senderId === user?.username) {
+        toast({
+            title: "Inappropriate Language Detected",
+            description: "Please delete the message within 45 seconds to avoid a block.",
+            variant: "destructive",
+        });
+    }
+  }, [messageToWarn, user, toast]);
+
+  useEffect(() => {
+    prevMessagesRef.current = messages;
+  }, [messages]);
 
 
   useEffect(() => {
@@ -113,13 +123,12 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
       
       newMessages.sort((a, b) => a.timestamp - b.timestamp);
 
-      setMessages((prevMessages) => {
-        if (newMessages.length > prevMessages.length) {
-            const lastMessage = newMessages[newMessages.length - 1];
-            handleNewMessage(lastMessage);
-        }
-        return newMessages;
-      });
+      setMessages(newMessages);
+
+      if (newMessages.length > prevMessagesRef.current.length) {
+          const lastMessage = newMessages[newMessages.length - 1];
+          handleNewMessage(lastMessage);
+      }
     });
 
     return () => {
