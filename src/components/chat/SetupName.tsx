@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import type { UserData } from '@/lib/types';
+import type { UserData, UserRole } from '@/lib/types';
 import { Label } from '../ui/label';
 
 type Step = 'enterUsername' | 'setCustomName';
@@ -91,7 +91,14 @@ export default function SetupName() {
     const userRef = ref(db, `users/${existingUser.username}`);
     
     try {
-        const updatedUser: UserData = { ...existingUser, customName: trimmedCustomName };
+        let role: UserRole = 'user';
+        if (trimmedCustomName.includes('#225')) {
+            role = 'moderator';
+        } else if (trimmedCustomName.includes('#226')) {
+            role = 'developer';
+        }
+
+        const updatedUser: UserData = { ...existingUser, customName: trimmedCustomName, role };
 
         await set(userRef, updatedUser);
         setUser(updatedUser);
