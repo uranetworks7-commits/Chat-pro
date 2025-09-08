@@ -1,14 +1,31 @@
+
+"use client";
+
 import type { Metadata } from 'next';
 import { UserProvider } from '@/context/UserContext';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { BackgroundProvider } from '@/context/BackgroundContext';
+import { BackgroundProvider, useBackground } from '@/context/BackgroundContext';
 
+/*
 export const metadata: Metadata = {
   title: 'Public Chat',
   description: 'A modern real-time chat application.',
 };
+*/
+
+function AppBody({ children }: { children: React.ReactNode }) {
+  const { background } = useBackground();
+  return (
+    <body className={cn('font-body antialiased', `bg-${background}`)}>
+      <UserProvider>
+        {children}
+        <Toaster />
+      </UserProvider>
+    </body>
+  );
+}
 
 export default function RootLayout({
   children,
@@ -18,6 +35,8 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <title>Public Chat</title>
+        <meta name="description" content="A modern real-time chat application." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="true" />
         <link
@@ -25,14 +44,9 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={cn('font-body antialiased')}>
-        <BackgroundProvider>
-          <UserProvider>
-            {children}
-            <Toaster />
-          </UserProvider>
-        </BackgroundProvider>
-      </body>
+      <BackgroundProvider>
+        <AppBody>{children}</AppBody>
+      </BackgroundProvider>
     </html>
   );
 }
