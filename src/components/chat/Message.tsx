@@ -132,7 +132,7 @@ const MediaContent = ({ url }: { url: string }) => {
         return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover" width={300} height={300} />;
     }
     if (mediaType === 'video') {
-        return <video src={url} controls className="mt-2 rounded-lg max-w-xs" />;
+        return <video src={url} controls className="mt-2 rounded-lg max-w-[250px]" />;
     }
     if (mediaType === 'audio') {
         return <AudioPlayer url={url} />;
