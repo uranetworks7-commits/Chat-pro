@@ -12,7 +12,7 @@ import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from './Icons';
-import { Check, X, UserPlus, Search } from 'lucide-react';
+import { Check, X, UserPlus, Search, LogOut } from 'lucide-react';
 import type { UserData } from '@/lib/types';
 
 interface ProfileSheetProps {
@@ -78,8 +78,6 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     }
 
     const usersRef = ref(db, 'users');
-    // Temporarily disabling search by customName to avoid crash.
-    // The database needs to be indexed on `customName`.
     const usernameQuery = query(usersRef, orderByChild('username'), equalTo(friendName.trim()));
 
     try {
@@ -146,6 +144,12 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
           toast({ title: 'Friend request rejected.' });
       }
   };
+
+  const handleLogout = () => {
+    setUser(null);
+    toast({ title: 'You have been logged out.' });
+    onOpenChange(false);
+  }
   
   if (!user) return null;
 
@@ -209,6 +213,13 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
               <p className="text-sm text-muted-foreground text-center py-4">No new friend requests.</p>
             )}
           </div>
+        </div>
+        <Separator />
+        <div className="py-4">
+          <Button onClick={handleLogout} variant="destructive" className="w-full">
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </Button>
         </div>
       </SheetContent>
     </Sheet>
