@@ -178,6 +178,16 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
+    if (senderRole === 'system') {
+        return (
+            <div className="flex justify-center items-center my-2">
+                <div className="text-center text-xs text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
+                    {message.text}
+                </div>
+            </div>
+        );
+    }
+    
   return (
     <>
     <Confetti fire={fireConfetti} />
