@@ -57,7 +57,6 @@ export default function PrivateChatPage() {
   useEffect(() => {
     if (!chatId || !user) return;
 
-    let listener: any;
     const participantIds = chatId.split('_');
     const otherUserId = participantIds.find(id => id !== user.username);
     
@@ -70,6 +69,7 @@ export default function PrivateChatPage() {
             const snapshot = await get(otherUserRef);
             if (snapshot.exists()) {
                 const userData = snapshot.val();
+                // Ensure the username from the key is set in the object
                 setOtherUser({ ...userData, username: otherUserId });
             }
         } catch (error) {
@@ -77,26 +77,31 @@ export default function PrivateChatPage() {
         }
     }
 
-    fetchOtherUser();
-
-    listener = onValue(otherUserRef, (snapshot) => {
+    const listener = onValue(otherUserRef, (snapshot) => {
       if (snapshot.exists()) {
         const userData = snapshot.val();
         setOtherUser({ ...userData, username: otherUserId });
       }
     });
 
+    fetchOtherUser();
+
     return () => off(otherUserRef, 'value', listener);
 
   }, [chatId, user]);
 
+
   useEffect(() => {
-    document.title = 'Private Chat';
+    if (otherUser) {
+        document.title = `Chat with ${otherUser.customName}`;
+    } else {
+        document.title = 'Private Chat';
+    }
     // Cleanup function to reset title
     return () => {
         document.title = 'Public Chat';
     };
-  }, []);
+  }, [otherUser]);
 
 
   if (loading) {
@@ -114,7 +119,7 @@ export default function PrivateChatPage() {
             <ChatHeader otherUser={otherUser} />
             <div className="flex-1 flex flex-col chat-bg overflow-hidden">
                 <div className="flex-1 flex flex-col min-h-0">
-                    <MessageList chatId={chatId} isPrivateChat={true} />
+                    <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
                     <TypingIndicator chatId={chatId} />
                 </div>
             </div>

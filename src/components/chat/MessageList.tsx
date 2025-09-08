@@ -24,13 +24,28 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { MessageCircle } from 'lucide-react';
 
 interface MessageListProps {
   chatId?: string; // For private chats
   isPrivateChat?: boolean;
+  otherUserName?: string;
 }
 
-export default function MessageList({ chatId, isPrivateChat }: MessageListProps) {
+function WelcomeMessage({ otherUserName }: { otherUserName?: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center h-full text-center p-8">
+            <MessageCircle className="w-16 h-16 text-muted-foreground/50 mb-4" />
+            <h2 className="text-2xl font-bold">Welcome to your private chat!</h2>
+            <p className="text-muted-foreground">
+                You are now in a private conversation with <span className="font-semibold text-foreground">{otherUserName || '...'}</span>.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">Messages sent here are only visible to the two of you.</p>
+        </div>
+    );
+}
+
+export default function MessageList({ chatId, isPrivateChat, otherUserName }: MessageListProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const { user } = useUser();
   const { toast } = useToast();
@@ -179,6 +194,10 @@ export default function MessageList({ chatId, isPrivateChat }: MessageListProps)
     setReportDialogOpen(false);
     setMessageToReport(null);
   };
+  
+  if (isPrivateChat && messages.length === 0) {
+    return <WelcomeMessage otherUserName={otherUserName} />;
+  }
 
   return (
     <>
