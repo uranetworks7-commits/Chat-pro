@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, remove, serverTimestamp, set } from 'firebase/database';
+import { ref, onValue, off, remove, serverTimestamp, set, push } from 'firebase/database';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Message, UserData } from '@/lib/types';
@@ -126,7 +126,7 @@ export default function MessageList() {
 
   return (
     <>
-      <ScrollArea className="flex-1" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1 bg-background/50" ref={scrollAreaRef}>
         <div className="p-4 space-y-2">
         <AnimatePresence>
           {messages.map((message) => (

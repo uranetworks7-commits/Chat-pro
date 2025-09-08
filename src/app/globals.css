@@ -90,3 +90,9 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+.chat-bg {
+    background-image: url('https://files.catbox.moe/u394q2.jpg');
+    background-size: cover;
+    background-position: center;
+}

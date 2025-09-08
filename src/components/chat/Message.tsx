@@ -78,28 +78,29 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock }: MessageProps
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
 
   return (
-    <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors', isSender ? 'justify-end' : 'justify-start')}>
-      {!isSender && (
+    <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors', isSender ? 'flex-row-reverse' : 'flex-row')}>
+      <div className="flex flex-col items-center w-16 flex-shrink-0">
         <Avatar className="h-10 w-10 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-      )}
+        {!isSender && (
+             <div className="flex items-center gap-1 mt-1">
+                <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
+                    {message.senderName}
+                </span>
+                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+            </div>
+        )}
+      </div>
+
       <div className={cn('flex flex-col max-w-[70%]', isSender ? 'items-end' : 'items-start')}>
         <div className={cn(
             'rounded-xl p-3 relative', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
-            {!isSender && (
-                 <div className="flex items-center gap-2 mb-1">
-                    <span className={cn('text-sm font-medium', roleStyles[senderRole])}>
-                        {message.senderName}
-                    </span>
-                    {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-4 w-4" />}
-                </div>
-            )}
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
             {message.imageUrl && <img src={message.imageUrl} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" />}
         </div>
@@ -107,7 +108,8 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock }: MessageProps
             {format(new Date(message.timestamp), 'p')}
         </span>
       </div>
-       <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+
+       <div className="opacity-0 group-hover:opacity-100 transition-opacity self-center">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-7 w-7">
