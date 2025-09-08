@@ -30,7 +30,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const { user, setUser } = useUser();
   const { toast } = useToast();
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
-  const [friendUsername, setFriendUsername] = useState('');
+  const [friendCustomName, setFriendCustomName] = useState('');
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -64,10 +64,10 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   }, [user]);
   
   useEffect(() => {
-    if (!friendUsername) {
+    if (!friendCustomName) {
       setSearchedUser(null);
     }
-  }, [friendUsername]);
+  }, [friendCustomName]);
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
@@ -80,10 +80,10 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   };
 
   const handleSearchFriend = async () => {
-    const usernameToSearch = friendUsername.trim();
-    if (!usernameToSearch || !user) return;
+    const nameToSearch = friendCustomName.trim();
+    if (!nameToSearch || !user) return;
 
-    if (usernameToSearch === user.username) {
+    if (nameToSearch === user.customName) {
         toast({ title: "You can't add yourself!", variant: 'destructive' });
         return;
     }
@@ -91,20 +91,23 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     setIsSearching(true);
     setSearchedUser(null);
 
-    const userRef = ref(db, `users/${usernameToSearch}`);
+    const usersRef = ref(db, 'users');
+    const nameQuery = query(usersRef, orderByChild('customName'), equalTo(nameToSearch));
 
     try {
-        const snapshot = await get(userRef);
+        const snapshot = await get(nameQuery);
         if (snapshot.exists()) {
-            const recipientData = snapshot.val() as UserData;
-            setSearchedUser({ ...recipientData, username: snapshot.key! });
+            const data = snapshot.val();
+            const recipientId = Object.keys(data)[0];
+            const recipientData = data[recipientId] as UserData;
+            setSearchedUser({ ...recipientData, username: recipientId });
         } else {
             toast({ title: 'User not found.', variant: 'destructive' });
             setSearchedUser(null);
         }
     } catch (error) {
         console.error("Error searching friend:", error);
-        toast({ title: 'An error occurred during search.', variant: 'destructive' });
+        toast({ title: 'An error occurred during search. Make sure you have the correct display name.', variant: 'destructive' });
     } finally {
         setIsSearching(false);
     }
@@ -120,7 +123,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
 
         await update(ref(db), updates);
         toast({ title: `Friend request sent to ${searchedUser.customName || searchedUser.username}!` });
-        setFriendUsername('');
+        setFriendCustomName('');
         setSearchedUser(null);
     } catch (error) {
         console.error("Error sending friend request:", error);
@@ -189,10 +192,10 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
          <div className="py-4 spacey-y-4">
             <h3 className="font-semibold text-foreground">Add Friend</h3>
             <div className="space-y-2">
-                <Label htmlFor="friend-username">Username</Label>
+                <Label htmlFor="friend-customName">Display Name</Label>
                 <div className="flex gap-2">
-                    <Input id="friend-username" placeholder="Enter username..." value={friendUsername} onChange={(e) => setFriendUsername(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} />
-                    <Button onClick={handleSearchFriend} disabled={!friendUsername.trim() || isSearching} size="icon">
+                    <Input id="friend-customName" placeholder="Enter display name..." value={friendCustomName} onChange={(e) => setFriendCustomName(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} />
+                    <Button onClick={handleSearchFriend} disabled={!friendCustomName.trim() || isSearching} size="icon">
                         {isSearching ? <span className="animate-spin h-4 w-4 rounded-full border-b-2 border-current" /> : <Search />}
                     </Button>
                 </div>
