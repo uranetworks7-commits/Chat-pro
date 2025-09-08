@@ -171,7 +171,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
   }
 
   return (
-    <div className="p-3 border-t bg-card/80">
+    <div className="px-3 bg-card/80">
       {replyTo && (
         <div className="flex items-center justify-between p-2 rounded-t-md bg-secondary text-sm mb-1">
             <div className="flex items-center gap-2 overflow-hidden">
@@ -199,7 +199,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
           }}
           placeholder={getPlaceholder()}
           className={cn(
-            "flex-1 bg-background text-base min-h-12 max-h-48",
+            "flex-1 bg-background text-base min-h-11 max-h-48",
             isBlocked ? "pl-2 text-destructive placeholder:text-destructive/80" : ""
           )}
           disabled={isBlocked}

@@ -129,7 +129,7 @@ export default function PrivateChatPage() {
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} onReply={handleReply} />
             </div>
-            <div className="mb-2">
+            <div className="mb-4">
                 <TypingIndicator chatId={chatId} />
                 <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
             </div>
