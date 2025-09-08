@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, ImagePlus, X, MicOff } from 'lucide-react';
+import { Send, Paperclip, X, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
@@ -21,7 +21,7 @@ interface MessageInputProps {
 
 export default function MessageInput({ chatId }: MessageInputProps) {
   const [text, setText] = useState('');
-  const [isSendingImage, setIsSendingImage] = useState(false);
+  const [isSendingMedia, setIsSendingMedia] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
@@ -53,7 +53,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
 
   const handleTextChange = (newText: string) => {
       setText(newText);
-      if (!isSendingImage) {
+      if (!isSendingMedia) {
         handleTyping(true);
       }
 
@@ -70,7 +70,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   };
 
   const handleTyping = (isTyping: boolean) => {
-    if (!user || !typingStatusRef || isSendingImage) return;
+    if (!user || !typingStatusRef || isSendingMedia) return;
     if (isTyping) {
       set(typingStatusRef, { name: user.customName });
       clearTimeout(typingRef.current);
@@ -127,8 +127,8 @@ export default function MessageInput({ chatId }: MessageInputProps) {
         timestamp: serverTimestamp(),
       };
 
-      if (isSendingImage) {
-        messagePayload.imageUrl = messageText;
+      if (isSendingMedia) {
+        messagePayload.imageUrl = messageText; // imageUrl is now a generic mediaUrl
       } else {
         messagePayload.text = messageText;
       }
@@ -151,7 +151,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
                 const currentUser = currentUserSnap.val() as UserData;
 
                 const metadataUpdate: any = {
-                    lastMessage: isSendingImage ? 'Image' : messageText,
+                    lastMessage: isSendingMedia ? 'Media' : messageText,
                     timestamp: serverTimestamp(),
                     participants: {
                         [user.username]: {
@@ -170,7 +170,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
       }
 
       setText('');
-      if(isSendingImage) setIsSendingImage(false);
+      if(isSendingMedia) setIsSendingMedia(false);
       handleTyping(false);
 
     } catch (error) {
@@ -183,14 +183,14 @@ export default function MessageInput({ chatId }: MessageInputProps) {
     }
   };
 
-  const toggleImageMode = () => {
-    setIsSendingImage(!isSendingImage);
+  const toggleMediaMode = () => {
+    setIsSendingMedia(!isSendingMedia);
     setText('');
   }
   
   const getPlaceholder = () => {
     if (isBlocked) return "You are blocked and cannot send messages.";
-    if (isSendingImage) return "Enter your image URL...";
+    if (isSendingMedia) return "Enter your media URL (image, video, audio)...";
     return "Type your message...";
   }
 
@@ -213,8 +213,8 @@ export default function MessageInput({ chatId }: MessageInputProps) {
           rows={1}
         />
         <div className="absolute top-1/2 right-2 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleImageMode} disabled={isBlocked} className="h-8 w-8">
-            {isSendingImage ? <X className="h-4 w-4" /> : <ImagePlus className="h-4 w-4" />}
+          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-8 w-8">
+            {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
           <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8">
             <Send className="h-4 w-4" />

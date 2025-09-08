@@ -88,13 +88,38 @@ function isValidHttpUrl(string: string) {
   return url.protocol === "http:" || url.protocol === "https:" || url.protocol === "https:";
 }
 
+function getMediaType(url: string) {
+    if (!isValidHttpUrl(url)) return null;
+    const extension = url.split('.').pop()?.toLowerCase().split('?')[0];
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(extension!)) return 'image';
+    if (['mp4', 'webm', 'mov'].includes(extension!)) return 'video';
+    if (['mp3', 'wav', 'ogg', 'm4a'].includes(extension!)) return 'audio';
+    return null;
+}
+
+const MediaContent = ({ url }: { url: string }) => {
+    const mediaType = getMediaType(url);
+
+    if (mediaType === 'image') {
+        return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={250} height={150} />;
+    }
+    if (mediaType === 'video') {
+        return <video src={url} controls className="mt-2 rounded-lg max-w-xs" />;
+    }
+    if (mediaType === 'audio') {
+        return <audio src={url} controls className="mt-2 w-full max-w-xs" />;
+    }
+    return null;
+};
+
+
 const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
   const [senderData, setSenderData] = useState<UserData | null>(null);
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
-  const showImage = message.imageUrl && isValidHttpUrl(message.imageUrl);
+  const hasMedia = message.imageUrl && isValidHttpUrl(message.imageUrl);
 
   useEffect(() => {
     if (canModerate && !isSender) {
@@ -143,7 +168,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 </div>
             )}
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
-            {showImage && <Image src={message.imageUrl!} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={250} height={150} />}
+            {hasMedia && <MediaContent url={message.imageUrl!} />}
         </div>
         <span className="text-[10px] text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
