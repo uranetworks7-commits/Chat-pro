@@ -55,9 +55,24 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
   const [messageToDelete, setMessageToDelete] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const userInteractedRef = useRef(false);
 
   useEffect(() => {
     audioRef.current = new Audio('https://files.catbox.moe/fwx9jw.mp3');
+    
+    const handleInteraction = () => {
+        userInteractedRef.current = true;
+        window.removeEventListener('click', handleInteraction);
+        window.removeEventListener('keydown', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+
+    return () => {
+        window.removeEventListener('click', handleInteraction);
+        window.removeEventListener('keydown', handleInteraction);
+    };
   }, []);
 
   useEffect(() => {
@@ -73,7 +88,7 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
         if (messages.length > 0 && messageList.length > messages.length) {
             const lastMessage = messageList[messageList.length - 1];
-            if (lastMessage.senderId !== user?.username && audioRef.current) {
+            if (lastMessage.senderId !== user?.username && audioRef.current && userInteractedRef.current) {
                 audioRef.current.play().catch(e => console.error("Audio play failed:", e));
             }
         }
@@ -272,3 +287,5 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     </>
   );
 }
+
+    

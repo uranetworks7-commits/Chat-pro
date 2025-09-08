@@ -48,21 +48,37 @@ const messageBgStyles = {
 function parseAndRenderMessage(text: string) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
+    const mediaExtensions = {
+      image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+      video: ['mp4', 'webm', 'mov'],
+      audio: ['mp3', 'wav', 'ogg', 'm4a'],
+    };
   
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
         let buttonText = "Visit Site";
         let Icon = LinkIcon;
         let variant: "default" | "secondary" | "destructive" = "secondary";
-  
-        if (part.includes("youtube.com") || part.includes("youtu.be")) {
-          buttonText = "Watch Video";
-          Icon = Play;
-          variant = "destructive";
-        } else if (part.includes("mediafire.com")) {
-          buttonText = "Download Now";
-          Icon = Download;
-          variant = "default";
+        
+        try {
+            const url = new URL(part);
+            const extension = url.pathname.split('.').pop()?.toLowerCase();
+            
+            if (mediaExtensions.video.includes(extension!)) {
+                buttonText = "Watch Video";
+                Icon = Play;
+                variant = "destructive";
+            } else if (mediaExtensions.audio.includes(extension!)) {
+                buttonText = "Play Audio";
+                Icon = Play;
+                variant = "default";
+            } else if (mediaExtensions.image.includes(extension!)) {
+                // Images are handled by MediaContent, so we don't render a button for them.
+                // We'll just render the raw URL which will be hidden.
+                return null;
+            }
+        } catch (e) {
+            // Not a valid URL, treat as text
         }
   
         return (
@@ -85,7 +101,7 @@ function isValidHttpUrl(string: string) {
   } catch (_) {
     return false;  
   }
-  return url.protocol === "http:" || url.protocol === "https:" || url.protocol === "https:";
+  return url.protocol === "http:" || url.protocol === "https:";
 }
 
 function getMediaType(url: string) {
@@ -200,3 +216,5 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
+    
