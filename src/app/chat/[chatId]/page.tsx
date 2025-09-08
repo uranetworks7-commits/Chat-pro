@@ -101,11 +101,9 @@ export default function PrivateChatPage() {
     <main className="min-h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-2 sm:p-0">
         <div className="h-full w-full max-w-4xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl rounded-lg overflow-hidden border">
             <ChatHeader otherUser={otherUser} />
-            <div className="flex-1 flex flex-col chat-bg overflow-hidden">
-                <div className="flex-1 flex flex-col min-h-0">
-                    <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
-                    <TypingIndicator chatId={chatId} />
-                </div>
+            <div className="flex-1 flex flex-col chat-bg min-h-0">
+                <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
+                <TypingIndicator chatId={chatId} />
             </div>
             <MessageInput chatId={chatId} />
         </div>

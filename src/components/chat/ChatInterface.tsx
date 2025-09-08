@@ -10,11 +10,9 @@ export default function ChatInterface() {
   return (
     <div className="h-full w-full max-w-4xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl rounded-lg overflow-hidden border">
       <Header />
-      <div className="flex-1 flex flex-col chat-bg overflow-hidden">
-        <div className="flex-1 flex flex-col min-h-0">
-            <MessageList isPrivateChat={false} />
-            <TypingIndicator />
-        </div>
+      <div className="flex-1 flex flex-col chat-bg min-h-0">
+        <MessageList isPrivateChat={false} />
+        <TypingIndicator />
       </div>
       <MessageInput />
     </div>
