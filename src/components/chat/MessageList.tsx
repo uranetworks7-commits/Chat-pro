@@ -88,11 +88,11 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
   useEffect(() => {
     if (messageToWarn && messageToWarn.senderId === user?.username) {
-        toast({
-            title: "Warning:- impropriate Language Detect",
-            description: "Messege Please Delete it , You May Be Blocked! This Against Our Policies !",
-            variant: "destructive",
-        });
+      toast({
+        title: "Warning: Inappropriate Language Detected",
+        description: "Please delete this message immediately. Failure to do so will result in a temporary block.",
+        variant: "destructive",
+      });
     }
   }, [messageToWarn, user, toast]);
 
@@ -375,3 +375,5 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     </>
   );
 }
+
+    
