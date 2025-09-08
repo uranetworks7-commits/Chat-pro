@@ -58,13 +58,13 @@ export default function Header({ onFocusInput }: HeaderProps) {
           <Link href="/profile">
             <Button variant="ghost" size="icon" className="relative h-8 w-8">
               <User className="h-4 w-4" />
-              {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
+              {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />}
               <span className="sr-only">Open Profile</span>
             </Button>
           </Link>
           <Button variant="ghost" size="icon" onClick={() => setFriendsOpen(true)} className="relative h-8 w-8">
             <Users className="h-4 w-4" />
-            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-accent ring-2 ring-card" />}
+            {hasFriendRequest && <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-card" />}
             <span className="sr-only">Open Friends List</span>
           </Button>
         </div>
