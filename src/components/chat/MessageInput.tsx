@@ -157,9 +157,9 @@ export default function MessageInput({ chatId }: MessageInputProps) {
   }
 
   return (
-    <div className="p-2 border-t bg-card/80">
+    <div className="p-3 border-t bg-card/80">
       <div className="relative">
-        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-destructive" />}
+        {isBlocked && <MicOff className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-destructive" />}
         <Textarea
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
@@ -170,19 +170,21 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             }
           }}
           placeholder={getPlaceholder()}
-          className={cn("pr-20 bg-background", isBlocked ? "pl-9 text-destructive placeholder:text-destructive/80" : "", "h-9 text-xs")}
+          className={cn("pr-24 bg-background", isBlocked ? "pl-10 text-destructive placeholder:text-destructive/80" : "", "h-12 text-base")}
           disabled={isBlocked}
           rows={1}
         />
         <div className="absolute top-1/2 right-1.5 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-7 w-7">
-            {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
+          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9">
+            {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-7 w-7">
-            <Send className="h-4 w-4" />
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9">
+            <Send className="h-5 w-5" />
           </Button>
         </div>
       </div>
     </div>
   );
 }
+
+    

@@ -118,7 +118,7 @@ const MediaContent = ({ url }: { url: string }) => {
     const mediaType = getMediaType(url);
 
     if (mediaType === 'image') {
-        return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover" width={200} height={200} />;
+        return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover" width={300} height={300} />;
     }
     if (mediaType === 'video') {
         return <video src={url} controls className="mt-2 rounded-lg max-w-xs" />;
@@ -181,7 +181,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     if (senderRole === 'system') {
         return (
             <div className="flex justify-center items-center my-2">
-                <div className="flex items-center gap-2 text-center text-xs text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
+                <div className="flex items-center gap-2 text-center text-sm text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
                     <RoleIcon role="system" className="h-4 w-4" />
                     <span className="font-bold">{message.senderName}</span>
                     <ArrowRight className="h-3 w-3" />
@@ -194,7 +194,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const MessageOptions = () => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6">
+            <Button variant="ghost" size="icon" className="h-7 w-7">
                 <MoreHorizontal className="h-4 w-4 text-primary" />
             </Button>
         </DropdownMenuTrigger>
@@ -215,9 +215,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   return (
     <>
     <Confetti fire={fireConfetti} />
-    <div className={cn('flex flex-col gap-1 p-1 my-2 rounded-lg transition-colors group', isSender ? 'items-end' : 'items-start')}>
-      <div className={cn('flex items-start gap-2', isSender ? 'flex-row-reverse' : 'flex-row')}>
-        <Avatar className="h-6 w-6 border-2 border-muted">
+    <div className={cn('flex flex-col gap-1 p-2 my-2 rounded-lg transition-colors group', isSender ? 'items-end' : 'items-start')}>
+      <div className={cn('flex items-start gap-3', isSender ? 'flex-row-reverse' : 'flex-row')}>
+        <Avatar className="h-8 w-8 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
             <RoleIcon role={senderRole} />
@@ -226,21 +226,21 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         <div className="flex items-center gap-2">
             {isSender && <MessageOptions />}
             <div className="flex items-center gap-1.5">
-                <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
+                <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
-                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
+                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
             </div>
             {!isSender && <MessageOptions />}
         </div>
       </div>
 
-      <div className={cn('max-w-[85%]', isSender ? 'self-end' : 'self-start ml-8')}>
+      <div className={cn('max-w-[85%]', isSender ? 'self-end' : 'self-start ml-11')}>
           <div className={cn(
-              'rounded-lg p-2 relative shadow-md', 
+              'rounded-lg p-3 relative shadow-md', 
               isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
           )}>
-              <div className="text-xs break-words">{message.text && parseAndRenderMessage(message.text)}</div>
+              <div className="text-base break-words">{message.text && parseAndRenderMessage(message.text)}</div>
               {hasMedia && <MediaContent url={message.imageUrl!} />}
                {showLikeButton && (
                   <div className="mt-2 flex items-center gap-2">
@@ -258,7 +258,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
               )}
           </div>
       </div>
-      <span className={cn("text-[8px] text-muted-foreground mt-1 px-1", isSender ? 'self-end' : 'self-start ml-8')}>
+      <span className={cn("text-xs text-muted-foreground mt-1 px-1", isSender ? 'self-end' : 'self-start ml-11')}>
           {format(new Date(message.timestamp), 'p')}
       </span>
     </div>
@@ -267,3 +267,5 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
+    

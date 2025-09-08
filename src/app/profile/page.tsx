@@ -183,69 +183,69 @@ export default function ProfilePage() {
         <header className="flex flex-row items-center justify-between p-2 border-b">
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => router.back()}><ArrowLeft /></Button>
-                <h1 className="text-lg font-semibold">Profile</h1>
+                <h1 className="text-xl font-semibold">Profile</h1>
             </div>
         </header>
         <ScrollArea className="flex-1">
-            <div className="py-4 flex flex-col items-center">
-              <Avatar className="h-20 w-20 border-4 border-primary shadow-lg">
+            <div className="py-6 flex flex-col items-center">
+              <Avatar className="h-24 w-24 border-4 border-primary shadow-lg">
                 <AvatarImage src={user.profileImageUrl} />
-                <AvatarFallback className="text-3xl">
-                  <RoleIcon role={user.role} className="h-10 w-10" />
+                <AvatarFallback className="text-4xl">
+                  <RoleIcon role={user.role} className="h-12 w-12" />
                 </AvatarFallback>
               </Avatar>
-              <h2 className="mt-3 text-xl font-bold font-headline">{user.customName}</h2>
-              <p className="text-xs text-muted-foreground">@{user.username}</p>
-              <p className="mt-1 text-xs capitalize inline-flex items-center gap-1.5"><RoleIcon role={user.role} className="h-3 w-3" />{user.role}</p>
+              <h2 className="mt-4 text-2xl font-bold font-headline">{user.customName}</h2>
+              <p className="text-sm text-muted-foreground">@{user.username}</p>
+              <p className="mt-1 text-sm capitalize inline-flex items-center gap-1.5"><RoleIcon role={user.role} className="h-4 w-4" />{user.role}</p>
             </div>
             <div className="px-4">
               <Separator />
               <div className="py-4 space-y-3">
-                  <h3 className="font-semibold text-foreground text-sm">Update Avatar</h3>
+                  <h3 className="font-semibold text-foreground">Update Avatar</h3>
                   <div className="space-y-2">
-                      <Label htmlFor="avatar-url" className="text-xs">Avatar URL</Label>
+                      <Label htmlFor="avatar-url">Avatar URL</Label>
                       <div className="flex gap-2">
-                          <Input id="avatar-url" placeholder="https://..." value={newAvatarUrl} onChange={(e) => setNewAvatarUrl(e.target.value)} className="h-9 text-xs" />
-                          <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl} size="sm">Set</Button>
+                          <Input id="avatar-url" placeholder="https://..." value={newAvatarUrl} onChange={(e) => setNewAvatarUrl(e.target.value)} />
+                          <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl}>Set</Button>
                       </div>
                   </div>
               </div>
               <Separator />
                <div className="py-4 space-y-3">
-                  <h3 className="font-semibold text-foreground text-sm">Change Background</h3>
+                  <h3 className="font-semibold text-foreground">Change Background</h3>
                    <div className="flex justify-between gap-2">
-                      <Button variant={background === 'bg-chat-1' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-1')} className="flex-1 h-9 text-xs">
+                      <Button variant={background === 'bg-chat-1' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-1')} className="flex-1">
                           <ImageIcon className="mr-2 h-4 w-4"/> Image 1
                       </Button>
-                      <Button variant={background === 'bg-chat-2' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-2')} className="flex-1 h-9 text-xs">
+                      <Button variant={background === 'bg-chat-2' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-2')} className="flex-1">
                           <ImageIcon className="mr-2 h-4 w-4"/> Image 2
                       </Button>
-                      <Button variant={background === 'bg-chat-none' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-none')} className="h-9 text-xs px-3">
+                      <Button variant={background === 'bg-chat-none' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-none')} className="px-4">
                           <ImageOff className="mr-2 h-4 w-4"/> None
                       </Button>
                    </div>
               </div>
               <Separator />
                <div className="py-4 space-y-3">
-                  <h3 className="font-semibold text-foreground text-sm">Add Friend</h3>
+                  <h3 className="font-semibold text-foreground">Add Friend</h3>
                   <div className="space-y-2">
-                      <Label htmlFor="friend-customName" className="text-xs">Display Name</Label>
+                      <Label htmlFor="friend-customName">Display Name</Label>
                       <div className="flex gap-2">
-                          <Input id="friend-customName" placeholder="Enter display name..." value={friendCustomName} onChange={(e) => setFriendCustomName(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} className="h-9 text-xs" />
-                          <Button onClick={handleSearchFriend} disabled={!friendCustomName.trim() || isSearching} size="icon" className="h-9 w-9">
-                              {isSearching ? <span className="animate-spin h-4 w-4 rounded-full border-b-2 border-current" /> : <Search className="h-4 w-4" />}
+                          <Input id="friend-customName" placeholder="Enter display name..." value={friendCustomName} onChange={(e) => setFriendCustomName(e.target.value)}  onKeyDown={(e) => e.key === 'Enter' && handleSearchFriend()} />
+                          <Button onClick={handleSearchFriend} disabled={!friendCustomName.trim() || isSearching} size="icon">
+                              {isSearching ? <span className="animate-spin h-5 w-5 rounded-full border-b-2 border-current" /> : <Search className="h-5 w-5" />}
                           </Button>
                       </div>
                        {searchedUser && (
-                          <div className="flex items-center justify-between p-2 rounded-md bg-secondary mt-2">
-                              <div className="flex items-center gap-2">
-                                  <Avatar className="h-8 w-8">
+                          <div className="flex items-center justify-between p-3 rounded-md bg-secondary mt-2">
+                              <div className="flex items-center gap-3">
+                                  <Avatar className="h-10 w-10">
                                       <AvatarImage src={searchedUser.profileImageUrl} />
                                       <AvatarFallback>{searchedUser.customName ? searchedUser.customName.charAt(0) : '?'}</AvatarFallback>
                                   </Avatar>
-                                  <span className="font-medium text-xs">{searchedUser.customName || searchedUser.username}</span>
+                                  <span className="font-medium">{searchedUser.customName || searchedUser.username}</span>
                               </div>
-                              <Button onClick={handleSendFriendRequest} size="sm" className="h-8 text-xs">
+                              <Button onClick={handleSendFriendRequest} size="sm">
                                   <UserPlus className="mr-2 h-4 w-4" />
                                   Send Request
                               </Button>
@@ -255,27 +255,27 @@ export default function ProfilePage() {
               </div>
               <Separator />
               <div className="py-4">
-                <h3 className="font-semibold text-foreground text-sm">Friend Requests</h3>
+                <h3 className="font-semibold text-foreground">Friend Requests</h3>
                 <div className="mt-2 space-y-2">
                   {friendRequests.length > 0 ? (
                     friendRequests.map(req => (
-                      <div key={req.id} className="flex items-center justify-between p-2 rounded-md bg-secondary">
-                        <span className="font-medium text-xs">{req.name}</span>
+                      <div key={req.id} className="flex items-center justify-between p-3 rounded-md bg-secondary">
+                        <span className="font-medium">{req.name}</span>
                         <div className="flex items-center">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-green-500 hover:bg-green-500/10" onClick={() => handleFriendRequest(req.id, 'accept')}><Check className="h-4 w-4"/></Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:bg-red-500/10" onClick={() => handleFriendRequest(req.id, 'reject')}><X className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-green-500 hover:bg-green-500/10" onClick={() => handleFriendRequest(req.id, 'accept')}><Check className="h-5 w-5"/></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:bg-red-500/10" onClick={() => handleFriendRequest(req.id, 'reject')}><X className="h-5 w-5" /></Button>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground text-center py-4">No new friend requests.</p>
+                    <p className="text-sm text-muted-foreground text-center py-4">No new friend requests.</p>
                   )}
                 </div>
               </div>
             </div>
         </ScrollArea>
         <div className="p-4 border-t">
-          <Button onClick={handleLogout} variant="destructive" className="w-full h-9 text-xs">
+          <Button onClick={handleLogout} variant="destructive" className="w-full">
             <LogOut className="mr-2 h-4 w-4" />
             Logout
           </Button>
@@ -283,3 +283,5 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+    

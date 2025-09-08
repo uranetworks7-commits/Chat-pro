@@ -26,26 +26,26 @@ function ChatHeader({ otherUser }: ChatHeaderProps) {
   const router = useRouter();
 
   return (
-    <header className="flex items-center justify-between p-2 border-b bg-card/80">
+    <header className="flex items-center justify-between p-3 border-b bg-card/80">
       <div className="flex items-center gap-3">
         <Button variant="ghost" onClick={() => router.push('/')} className="p-2 h-auto">
-          <ArrowLeft className="h-5 w-5" />
-          <span className="ml-2 font-semibold hidden sm:inline text-sm">Private Message</span>
+          <ArrowLeft className="h-6 w-6" />
+          <span className="ml-2 font-semibold hidden sm:inline">Private Message</span>
         </Button>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-4">
         {otherUser ? (
           <>
-            <h1 className="text-lg font-bold text-right">{otherUser.customName}</h1>
-            <Avatar className="h-8 w-8">
+            <h1 className="text-xl font-bold text-right">{otherUser.customName}</h1>
+            <Avatar className="h-10 w-10">
               <AvatarImage src={otherUser.profileImageUrl} />
               <AvatarFallback>{otherUser.customName.charAt(0)}</AvatarFallback>
             </Avatar>
           </>
         ) : (
           <div className="flex items-center gap-3">
-            <div className="h-5 w-28 bg-muted rounded-md animate-pulse" />
-            <div className="h-8 w-8 bg-muted rounded-full animate-pulse" />
+            <div className="h-6 w-32 bg-muted rounded-md animate-pulse" />
+            <div className="h-10 w-10 bg-muted rounded-full animate-pulse" />
           </div>
         )}
       </div>
@@ -113,3 +113,5 @@ export default function PrivateChatPage() {
     </main>
   );
 }
+
+    
