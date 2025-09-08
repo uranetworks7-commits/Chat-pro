@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Heart, ArrowRight, CornerUpLeft } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Star, ArrowRight, CornerUpLeft } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -177,8 +177,9 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 
   const getChatId = () => {
     if (!isPrivateChat || !user) return 'public';
-    const ids = [user.username, message.senderId].sort();
-    return ids.join('_');
+    // a message id for private chat has format {chatId}_chat_{messageId}
+    const chatIdFromMessage = message.id.split('_chat_')[0];
+    return chatIdFromMessage;
   }
 
   const handleLike = async () => {
@@ -349,7 +350,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     disabled={hasLiked && user?.role === 'user'}
                     className="h-auto p-1.5 rounded-full bg-background/50 hover:bg-background"
                 >
-                    <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-foreground")} />
+                    <Star className={cn("h-4 w-4", hasLiked ? "text-yellow-400 fill-current" : "text-foreground")} />
                 </Button>
                 {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
             </div>
