@@ -40,18 +40,24 @@ export default function SetupName() {
       const snapshot = await get(userRef);
       if (snapshot.exists()) {
         const userData = snapshot.val() as UserData;
+        const fullUserData = { ...userData, username: trimmedUsername };
+
         if (userData.customName) {
           // User exists and has custom name, log them in
-          setUser({...userData, username: trimmedUsername});
+          setUser(fullUserData);
           toast({ title: `Welcome back, ${userData.customName}!` });
         } else {
           // User exists but needs to set a custom name
-          setExistingUser(userData);
+          setExistingUser(fullUserData);
           setStep('setCustomName');
         }
       } else {
-        // User does not exist, prompt to create a new one
-        setStep('setCustomName');
+        // User does not exist, fail login
+        toast({
+            title: 'Login Failed',
+            description: 'This username does not exist. No new accounts can be created.',
+            variant: 'destructive'
+        });
       }
     } catch (error) {
       console.error('Failed to check username:', error);
@@ -76,21 +82,19 @@ export default function SetupName() {
       return;
     }
 
+    if (!existingUser) {
+        toast({ title: "An error occurred. Please go back and re-enter your username.", variant: 'destructive'});
+        return;
+    }
+
     setIsSubmitting(true);
-    const userRef = ref(db, `users/${username.trim()}`);
+    const userRef = ref(db, `users/${existingUser.username}`);
     
     try {
-        const newUser: UserData = existingUser 
-            ? { ...existingUser, customName: trimmedCustomName, username: username.trim() }
-            : {
-                username: username.trim(),
-                customName: trimmedCustomName,
-                role: 'user',
-                profileImageUrl: `https://avatar.vercel.sh/${username.trim()}.png`,
-            };
+        const updatedUser: UserData = { ...existingUser, customName: trimmedCustomName };
 
-        await set(userRef, newUser);
-        setUser(newUser);
+        await set(userRef, updatedUser);
+        setUser(updatedUser);
         toast({ title: `Welcome, ${trimmedCustomName}!` });
     } catch (error) {
         console.error('Failed to set user data:', error);
@@ -113,8 +117,8 @@ export default function SetupName() {
         </CardTitle>
         <CardDescription className="text-center">
             {step === 'enterUsername' 
-                ? 'Please enter your username to continue.'
-                : 'Choose a display name to start chatting.'}
+                ? 'Please enter your username to log in.'
+                : `Welcome, @${username}! Please set a display name to continue.`}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -147,11 +151,10 @@ export default function SetupName() {
       <CardFooter>
         <Button onClick={step === 'enterUsername' ? handleCheckUsername : handleSetCustomName} className="w-full text-lg py-6" disabled={isSubmitting}>
           {isSubmitting 
-            ? 'Submitting...' 
+            ? 'Verifying...' 
             : (step === 'enterUsername' ? 'Continue' : 'Join Chat')}
         </Button>
       </CardFooter>
     </Card>
   );
 }
-
