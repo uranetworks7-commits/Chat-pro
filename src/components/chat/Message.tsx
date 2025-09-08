@@ -78,9 +78,8 @@ function parseAndRenderMessage(text: string) {
             const extension = url.pathname.split('.').pop()?.toLowerCase();
             
             if (mediaExtensions.video.includes(extension!)) {
-                buttonText = "Watch Video";
-                Icon = Play;
-                variant = "destructive";
+                // Videos are handled by MediaContent.
+                return null;
             } else if (mediaExtensions.audio.includes(extension!)) {
                 // Audio is handled by MediaContent with the new AudioPlayer,
                 // so we don't render a button for them.
@@ -132,7 +131,7 @@ const MediaContent = ({ url }: { url: string }) => {
         return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover" width={300} height={300} />;
     }
     if (mediaType === 'video') {
-        return <video src={url} controls className="mt-2 rounded-lg max-w-[250px]" />;
+        return <video src={url} controls className="mt-2 rounded-lg w-[250px] aspect-square object-cover" />;
     }
     if (mediaType === 'audio') {
         return <AudioPlayer url={url} />;
@@ -374,5 +373,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
+    
 
     
