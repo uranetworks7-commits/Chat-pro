@@ -37,8 +37,8 @@ const roleStyles = {
 
 const messageBgStyles = {
     user: 'bg-secondary',
-    moderator: 'bg-green-900/80 border border-green-700 shadow-[0_0_15px_2px_rgba(34,197,94,0.4)]',
-    developer: 'bg-red-900/80 border border-red-700 shadow-[0_0_15px_2px_rgba(239,68,68,0.4)]',
+    moderator: 'bg-green-900/80 border border-green-700 shadow-[0_0_25px_5px_rgba(34,197,94,0.3)]',
+    developer: 'bg-red-900/80 border border-red-700 shadow-[0_0_25px_5px_rgba(239,68,68,0.3)]',
     system: 'bg-purple-800/80 border border-purple-600',
 }
 
