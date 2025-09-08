@@ -183,6 +183,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <div className="flex justify-center items-center my-2">
                 <div className="flex items-center gap-2 text-center text-xs text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
                     <RoleIcon role="system" className="h-4 w-4" />
+                    <span className="font-bold">{message.senderName}</span>
                     <span>{message.text}</span>
                 </div>
             </div>
@@ -260,5 +261,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
-
-    
