@@ -8,6 +8,9 @@ import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, push, set, serverTimestamp, onDisconnect, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
+import { blockUser } from '@/lib/utils';
+
+const abusiveWords = ["abusive", "hacking"];
 
 export default function MessageInput() {
   const [text, setText] = useState('');
@@ -43,7 +46,8 @@ export default function MessageInput() {
   };
 
   const handleSendMessage = async () => {
-    if (!text.trim() || !user) return;
+    const messageText = text.trim();
+    if (!messageText || !user) return;
     if (user.isBlocked && user.blockExpires && user.blockExpires > Date.now()) {
         toast({
             title: "You are blocked",
@@ -52,10 +56,24 @@ export default function MessageInput() {
         });
         return;
     }
+
+    const containsAbusiveWord = abusiveWords.some(word => messageText.toLowerCase().includes(word));
+    if (containsAbusiveWord) {
+        await blockUser(user, `User blocked for using inappropriate language.`);
+        toast({
+            title: "You have been blocked",
+            description: "Your account has been blocked for 30 minutes due to inappropriate language.",
+            variant: "destructive",
+        });
+        setText('');
+        handleTyping(false);
+        return;
+    }
+
     try {
       const messagesRef = ref(db, 'public_chat');
       await push(messagesRef, {
-        text: text,
+        text: messageText,
         senderId: user.username,
         senderName: user.customName,
         senderProfileUrl: user.profileImageUrl,

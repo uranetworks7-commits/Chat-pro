@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, remove, serverTimestamp, set, push } from 'firebase/database';
+import { ref, onValue, off, remove } from 'firebase/database';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Message, UserData } from '@/lib/types';
@@ -10,10 +10,13 @@ import MessageComponent from './Message';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ReportDialog from './ReportDialog';
 import { AnimatePresence, motion } from "framer-motion";
+import { blockUser } from '@/lib/utils';
+import { get, set as dbSet, push, serverTimestamp } from 'firebase/database';
+
 
 export default function MessageList() {
   const [messages, setMessages] = useState<Message[]>([]);
-  const { user, setUser } = useUser();
+  const { user } = useUser();
   const { toast } = useToast();
   const [isReportDialogOpen, setReportDialogOpen] = useState(false);
   const [messageToReport, setMessageToReport] = useState<Message | null>(null);
@@ -75,50 +78,35 @@ export default function MessageList() {
     setReportDialogOpen(true);
   };
   
-  const handleBlock = async (userIdToBlock: string) => {
-    const blockDuration = 30 * 60 * 1000; // 30 minutes
-    const expiry = Date.now() + blockDuration;
-    const userRef = ref(db, `users/${userIdToBlock}`);
-    try {
-        await set(userRef, {
-            ...user, // assuming we have the full user object to spread, otherwise fetch it first
-            isBlocked: true,
-            blockExpires: expiry
-        });
+  const handleBlock = async (userIdToBlock: string, senderName: string) => {
+    const userToBlockRef = ref(db, `users/${userIdToBlock}`);
+    const snapshot = await get(userToBlockRef);
+    if (snapshot.exists()) {
+        const userToBlock = snapshot.val() as UserData;
+        await blockUser(userToBlock, `${senderName} was blocked by a moderator.`);
         toast({
             title: "User Blocked",
-            description: `User has been blocked for 30 minutes.`,
+            description: `${senderName} has been blocked for 30 minutes.`,
         });
-        const systemMessage = {
-            text: `A toxic user has been blocked by our URA Firing Squad.`,
-            senderId: "system",
-            senderName: "URA System",
-            role: "system",
-            timestamp: serverTimestamp(),
-        };
-        const messagesRef = ref(db, 'public_chat');
-        const newMessageRef = await push(messagesRef, systemMessage);
-    } catch (e) {
-        console.error(e)
     }
   }
 
   const handleReportSubmit = async (reason: string) => {
     if (!messageToReport) return;
     const reportsRef = ref(db, `reports/${messageToReport.id}`);
-    await set(reportsRef, {
+    await dbSet(reportsRef, {
       reporter: user?.username,
       reportedUser: messageToReport.senderId,
       message: messageToReport.text || 'Image Message',
       reason,
       timestamp: serverTimestamp(),
     });
-
-    handleBlock(messageToReport.senderId);
+    
+    await handleBlock(messageToReport.senderId, messageToReport.senderName);
 
     toast({
       title: 'Thank you for your feedback! 📢',
-      description: 'URA Firing Squad is reviewing this toxic user.',
+      description: 'The user has been blocked and the report is under review.',
     });
     setReportDialogOpen(false);
     setMessageToReport(null);
@@ -126,7 +114,7 @@ export default function MessageList() {
 
   return (
     <>
-      <ScrollArea className="flex-1 bg-background/50" ref={scrollAreaRef}>
+      <ScrollArea className="flex-1" ref={scrollAreaRef}>
         <div className="p-4 space-y-2">
         <AnimatePresence>
           {messages.map((message) => (
@@ -143,7 +131,7 @@ export default function MessageList() {
                     message={message}
                     onReport={handleReport}
                     onDelete={handleDelete}
-                    onBlock={handleBlock}
+                    onBlock={(userId) => handleBlock(userId, message.senderName)}
                 />
             </motion.div>
           ))}
