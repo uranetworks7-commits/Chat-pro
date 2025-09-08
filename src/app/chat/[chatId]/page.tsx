@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from 'react';
@@ -64,7 +65,8 @@ export default function PrivateChatPage() {
     const otherUserRef = ref(db, `users/${otherUserId}`);
     const listener = onValue(otherUserRef, (snapshot) => {
       if (snapshot.exists()) {
-        setOtherUser({ ...snapshot.val(), username: otherUserId });
+        const userData = snapshot.val();
+        setOtherUser({ ...userData, username: otherUserId });
       }
     });
 
