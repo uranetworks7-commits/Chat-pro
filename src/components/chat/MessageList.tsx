@@ -81,9 +81,14 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
         const containsAbusiveWord = blockedWords.some(word => messageText.toLowerCase().includes(word.toLowerCase()));
         if (containsAbusiveWord) {
           setMessageToWarn(newMessage);
+          toast({
+              title: "Inappropriate Language Detected",
+              description: "Please delete the message within 45 seconds to avoid a block.",
+              variant: "destructive",
+          });
         }
     }
-  }, [user, isPrivateChat]);
+  }, [user, isPrivateChat, toast]);
 
 
   useEffect(() => {
@@ -128,14 +133,21 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
 
   useEffect(() => {
       if (messageToWarn && user) {
-          const userToBlock = { ...user, username: messageToWarn.senderId, customName: messageToWarn.senderName };
-          const timeoutId = setTimeout(() => {
-              blockUser(userToBlock, `URA Firing Squad Blocked ${userToBlock.customName}.`);
-              setPendingBlocks(prev => {
-                  const newMap = new Map(prev);
-                  newMap.delete(messageToWarn.id);
-                  return newMap;
-              });
+          const senderId = messageToWarn.senderId;
+          const userToBlockRef = ref(db, `users/${senderId}`);
+          
+          const timeoutId = setTimeout(async () => {
+              const snapshot = await get(userToBlockRef);
+              if (snapshot.exists()) {
+                  const userToBlockData = snapshot.val() as UserData;
+                  const userToBlock = { ...userToBlockData, username: senderId };
+                  blockUser(userToBlock, `URA Firing Squad Blocked ${userToBlock.customName}.`);
+                  setPendingBlocks(prev => {
+                      const newMap = new Map(prev);
+                      newMap.delete(messageToWarn.id);
+                      return newMap;
+                  });
+              }
           }, 45 * 1000);
           
           setPendingBlocks(prev => new Map(prev).set(messageToWarn.id, timeoutId));
