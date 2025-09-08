@@ -126,11 +126,11 @@ export default function PrivateChatPage() {
     <main className="h-[100vh] w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="h-full w-full max-w-6xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border">
             <ChatHeader otherUser={otherUser} onFocusInput={handleFocusInput} />
-            <TypingIndicator chatId={chatId} />
-            <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
             <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} onReply={handleReply} />
             </div>
+            <TypingIndicator chatId={chatId} />
+            <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
         </div>
     </main>
   );
