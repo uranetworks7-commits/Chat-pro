@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, get } from 'firebase/database';
+import { ref, get, set } from 'firebase/database';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -12,101 +12,146 @@ import { useToast } from '@/hooks/use-toast';
 import type { UserData } from '@/lib/types';
 import { Label } from '../ui/label';
 
+type Step = 'enterUsername' | 'setCustomName';
+
 export default function SetupName() {
   const [username, setUsername] = useState('');
   const [customName, setCustomName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<Step>('enterUsername');
+  const [existingUser, setExistingUser] = useState<UserData | null>(null);
   const { setUser } = useUser();
   const { toast } = useToast();
 
-  const handleLogin = async () => {
+  const handleCheckUsername = async () => {
     const trimmedUsername = username.trim();
-    const trimmedCustomName = customName.trim();
-
-    if (trimmedUsername.length < 2 || trimmedCustomName.length < 3) {
+    if (trimmedUsername.length < 2) {
       toast({
-        title: 'Invalid input',
-        description: 'Username must be at least 2 characters and display name must be at least 3 characters.',
+        title: 'Invalid username',
+        description: 'Username must be at least 2 characters.',
         variant: 'destructive',
       });
       return;
     }
     setIsSubmitting(true);
     const userRef = ref(db, `users/${trimmedUsername}`);
-    
+
     try {
-        const snapshot = await get(userRef);
-        if (snapshot.exists()) {
-            const existingUser = snapshot.val() as UserData;
-            
-            if (existingUser.customName === trimmedCustomName) {
-                // User exists and customName matches, log them in
-                setUser(existingUser);
-                toast({ title: `Welcome back, ${existingUser.customName}!` });
-            } else {
-                // User exists, but customName does not match
-                toast({
-                    title: 'Incorrect Display Name',
-                    description: "The display name does not match the username. Please try again.",
-                    variant: 'destructive',
-                });
-            }
+      const snapshot = await get(userRef);
+      if (snapshot.exists()) {
+        const userData = snapshot.val() as UserData;
+        if (userData.customName) {
+          // User exists and has custom name, log them in
+          setUser({...userData, username: trimmedUsername});
+          toast({ title: `Welcome back, ${userData.customName}!` });
         } else {
-            // User does not exist
-             toast({
-                title: 'Login Failed',
-                description: "This user does not exist. Please check your username.",
-                variant: 'destructive',
-            });
+          // User exists but needs to set a custom name
+          setExistingUser(userData);
+          setStep('setCustomName');
         }
+      } else {
+        // User does not exist, prompt to create a new one
+        setStep('setCustomName');
+      }
     } catch (error) {
-      console.error('Failed to login:', error);
+      console.error('Failed to check username:', error);
       toast({
         title: 'An Error Occurred',
         description: 'Could not process your request. Please try again.',
         variant: 'destructive',
       });
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+  
+  const handleSetCustomName = async () => {
+    const trimmedCustomName = customName.trim();
+     if (trimmedCustomName.length < 3) {
+      toast({
+        title: 'Invalid Display Name',
+        description: 'Display name must be at least 3 characters.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    const userRef = ref(db, `users/${username.trim()}`);
+    
+    try {
+        const newUser: UserData = existingUser 
+            ? { ...existingUser, customName: trimmedCustomName, username: username.trim() }
+            : {
+                username: username.trim(),
+                customName: trimmedCustomName,
+                role: 'user',
+                profileImageUrl: `https://avatar.vercel.sh/${username.trim()}.png`,
+            };
+
+        await set(userRef, newUser);
+        setUser(newUser);
+        toast({ title: `Welcome, ${trimmedCustomName}!` });
+    } catch (error) {
+        console.error('Failed to set user data:', error);
+        toast({
+            title: 'An Error Occurred',
+            description: 'Could not save your display name.',
+            variant: 'destructive',
+        });
+    } finally {
         setIsSubmitting(false);
     }
   };
 
+
   return (
     <Card className="w-full max-w-md shadow-2xl animate-in fade-in zoom-in-95">
       <CardHeader>
-        <CardTitle className="text-3xl font-headline text-center text-primary">Welcome to Public Chat</CardTitle>
+        <CardTitle className="text-3xl font-headline text-center text-primary">
+          {step === 'enterUsername' ? 'Welcome to Public Chat' : 'Set Your Display Name'}
+        </CardTitle>
         <CardDescription className="text-center">
-          Please enter your credentials to log in.
+            {step === 'enterUsername' 
+                ? 'Please enter your username to continue.'
+                : 'Choose a display name to start chatting.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-2">
-            <Label htmlFor="username">Username</Label>
-            <Input
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Enter your username..."
-                className="text-lg h-12"
-            />
-        </div>
-        <div className="space-y-2">
-            <Label htmlFor="customName">Display Name</Label>
-            <Input
-                id="customName"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                placeholder="Enter your display name..."
-                className="text-lg h-12"
-            />
-        </div>
+        {step === 'enterUsername' ? (
+             <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username..."
+                    className="text-lg h-12"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCheckUsername()}
+                />
+            </div>
+        ) : (
+             <div className="space-y-2">
+                <Label htmlFor="customName">Display Name</Label>
+                <Input
+                    id="customName"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSetCustomName()}
+                    placeholder="Enter your desired display name..."
+                    className="text-lg h-12"
+                />
+            </div>
+        )}
       </CardContent>
       <CardFooter>
-        <Button onClick={handleLogin} className="w-full text-lg py-6" disabled={isSubmitting}>
-          {isSubmitting ? 'Logging in...' : 'Login'}
+        <Button onClick={step === 'enterUsername' ? handleCheckUsername : handleSetCustomName} className="w-full text-lg py-6" disabled={isSubmitting}>
+          {isSubmitting 
+            ? 'Submitting...' 
+            : (step === 'enterUsername' ? 'Continue' : 'Join Chat')}
         </Button>
       </CardFooter>
     </Card>
   );
 }
+
