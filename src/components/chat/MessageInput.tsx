@@ -134,40 +134,45 @@ export default function MessageInput({ chatId }: MessageInputProps) {
       }
       
       await push(messagesRef, messagePayload);
-
+      
       if (chatId) {
-        const chatMetadataRef = ref(db, `private_chats/${chatId}/metadata`);
-        const participantIds = chatId.split('_');
-        
-        const otherParticipantId = participantIds.find(id => id !== user.username);
-        if (otherParticipantId) {
-            const otherUserRef = ref(db, `users/${otherParticipantId}`);
-            const currentUserRef = ref(db, `users/${user.username}`);
+        // Wrap metadata update in its own try/catch to suppress errors
+        try {
+            const chatMetadataRef = ref(db, `private_chats/${chatId}/metadata`);
+            const participantIds = chatId.split('_');
             
-            const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
+            const otherParticipantId = participantIds.find(id => id !== user.username);
 
-            if(otherUserSnap.exists() && currentUserSnap.exists()){
-                const otherUser = { ...otherUserSnap.val(), username: otherParticipantId } as UserData;
-                const currentUser = { ...currentUserSnap.val(), username: user.username } as UserData;
+            if (otherParticipantId) {
+                const otherUserRef = ref(db, `users/${otherParticipantId}`);
+                const currentUserRef = ref(db, `users/${user.username}`);
+                
+                const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
 
-                messagePayload.role = currentUser.role;
+                if(otherUserSnap.exists() && currentUserSnap.exists()){
+                    const otherUser = { ...otherUserSnap.val(), username: otherParticipantId } as UserData;
+                    const currentUser = { ...currentUserSnap.val(), username: user.username } as UserData;
 
-                const metadataUpdate: any = {
-                    lastMessage: isSendingMedia ? 'Media' : messageText,
-                    timestamp: serverTimestamp(),
-                    participants: {
-                        [currentUser.username]: {
-                            customName: currentUser.customName,
-                            profileImageUrl: currentUser.profileImageUrl
-                        },
-                        [otherParticipantId!]: {
-                            customName: otherUser.customName,
-                            profileImageUrl: otherUser.profileImageUrl
+                    const metadataUpdate: any = {
+                        lastMessage: isSendingMedia ? 'Media' : messageText,
+                        timestamp: serverTimestamp(),
+                        participants: {
+                            [currentUser.username]: {
+                                customName: currentUser.customName,
+                                profileImageUrl: currentUser.profileImageUrl
+                            },
+                            [otherUser.username]: {
+                                customName: otherUser.customName,
+                                profileImageUrl: otherUser.profileImageUrl
+                            }
                         }
-                    }
-                };
-                await update(chatMetadataRef, metadataUpdate);
+                    };
+                    await update(chatMetadataRef, metadataUpdate);
+                }
             }
+        } catch (metadataError) {
+            console.error('Failed to update private chat metadata, but message was sent:', metadataError);
+            // This catch block is intentionally left empty to suppress the toast.
         }
       }
 
