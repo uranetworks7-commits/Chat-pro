@@ -152,8 +152,8 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
   return (
-    <div className={cn('flex items-start gap-2 p-1 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
-      <div className="flex flex-col items-center w-12 flex-shrink-0">
+    <div className={cn('flex items-start gap-1 p-1 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+      <div className="flex flex-col items-center w-10 flex-shrink-0">
         <Avatar className="h-6 w-6 border-2 border-muted">
           <AvatarImage src={message.senderProfileUrl} />
           <AvatarFallback>
@@ -162,10 +162,10 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         </Avatar>
         {!isSender && !isPrivateChat && (
              <div className="flex items-center gap-1 mt-1">
-                <span className={cn('text-[10px] font-medium truncate', roleStyles[senderRole])}>
+                <span className={cn('text-[9px] font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
                 </span>
-                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
             </div>
         )}
       </div>
@@ -177,21 +177,21 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         )}>
             {!isSender && isPrivateChat && (
                  <div className="flex items-center gap-1.5 mb-1">
-                    <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
+                    <span className={cn('text-[10px] font-semibold', roleStyles[senderRole])}>
                         {message.senderName}
                     </span>
-                    {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+                    {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-2 w-2" />}
                 </div>
             )}
-            <div className="text-xs">{message.text && parseAndRenderMessage(message.text)}</div>
+            <div className="text-[11px]">{message.text && parseAndRenderMessage(message.text)}</div>
             {hasMedia && <MediaContent url={message.imageUrl!} />}
         </div>
-        <span className="text-[9px] text-muted-foreground mt-1 px-1">
+        <span className="text-[8px] text-muted-foreground mt-1 px-1">
             {format(new Date(message.timestamp), 'p')}
         </span>
       </div>
 
-       <div className="opacity-0 group-hover:opacity-100 transition-opacity self-center">
+       <div className="self-center">
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-6 w-6">
