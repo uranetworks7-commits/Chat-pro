@@ -150,6 +150,8 @@ export default function MessageInput({ chatId }: MessageInputProps) {
                 const otherUser = otherUserSnap.val() as UserData;
                 const currentUser = currentUserSnap.val() as UserData;
 
+                messagePayload.role = currentUser.role;
+
                 const metadataUpdate: any = {
                     lastMessage: isSendingMedia ? 'Media' : messageText,
                     timestamp: serverTimestamp(),
