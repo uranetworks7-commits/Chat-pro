@@ -102,7 +102,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
             <RoleIcon role={senderRole} />
           </AvatarFallback>
         </Avatar>
-        {!isSender && (
+        {!isSender && !isPrivateChat && (
              <div className="flex items-center gap-1 mt-1">
                 <span className={cn('text-xs font-medium truncate', roleStyles[senderRole])}>
                     {message.senderName}
@@ -117,6 +117,14 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
             'rounded-xl p-3 relative shadow-md', 
             isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
         )}>
+            {!isSender && isPrivateChat && (
+                 <div className="flex items-center gap-1.5 mb-1">
+                    <span className={cn('text-xs font-semibold', roleStyles[senderRole])}>
+                        {message.senderName}
+                    </span>
+                    {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+                </div>
+            )}
             <div className="text-sm">{message.text && parseAndRenderMessage(message.text)}</div>
             {showImage && <Image src={message.imageUrl!} alt="chat attachment" className="mt-2 rounded-lg max-w-xs" width={300} height={200} />}
         </div>
