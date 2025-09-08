@@ -2,7 +2,6 @@ import { initializeApp, getApp, getApps } from "firebase/app";
 import { getDatabase } from "firebase/database";
 
 const firebaseConfig = {
-    apiKey: "AIzaSyArPQVGOR1gMWOiGVHVd0XkKFKRVMdWEcU",
     authDomain: "advanced-pri-wol-f66.firebaseapp.com",
     databaseURL: "https://advanced-pri-wol-f66-default-rtdb.firebaseio.com",
     projectId: "advanced-pri-wol-f66",

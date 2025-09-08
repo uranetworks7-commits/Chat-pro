@@ -96,7 +96,6 @@ export default function SetupName() {
             placeholder="Enter your custom name..."
             className="text-center text-lg h-12"
           />
-          <p className="text-xs text-muted-foreground text-center">Moderator/Devs can use their special code.</p>
         </div>
       </CardContent>
       <CardFooter>

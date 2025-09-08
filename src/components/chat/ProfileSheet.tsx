@@ -11,9 +11,8 @@ import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
-import { updateProfileAvatar } from '@/ai/flows/profile-avatar-update';
 import { RoleIcon } from './Icons';
-import { Check, X, Bot } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 interface ProfileSheetProps {
   open: boolean;
@@ -24,8 +23,6 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const { user, setUser } = useUser();
   const { toast } = useToast();
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
@@ -37,27 +34,6 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     setNewAvatarUrl('');
   };
   
-  const handleGenerateAvatar = async () => {
-      if (!user || !aiPrompt) return;
-      setIsGenerating(true);
-      try {
-        const result = await updateProfileAvatar({ description: `A digital avatar for a user named ${user.customName}. The theme is: ${aiPrompt}` });
-        if (result.avatarUrl) {
-            const updatedUser = { ...user, profileImageUrl: result.avatarUrl };
-            const userRef = ref(db, `users/${user.username}`);
-            await set(userRef, updatedUser);
-            setUser(updatedUser);
-            toast({ title: 'AI Avatar Generated!', description: 'Your new avatar has been set.' });
-        }
-      } catch (error) {
-          console.error("AI avatar generation failed:", error);
-          toast({ title: 'Generation Failed', description: 'Could not generate avatar. Please try again.', variant: 'destructive'});
-      } finally {
-          setIsGenerating(false);
-          setAiPrompt('');
-      }
-  }
-
   // TODO: Add friend request logic
   const friendRequests: any[] = []; // Placeholder
 
@@ -89,16 +65,6 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
                 <div className="flex gap-2">
                     <Input id="avatar-url" placeholder="https://..." value={newAvatarUrl} onChange={(e) => setNewAvatarUrl(e.target.value)} />
                     <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl}>Set</Button>
-                </div>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="ai-prompt">Generate with AI</Label>
-                <div className="flex gap-2">
-                    <Input id="ai-prompt" placeholder="e.g., a cosmic warrior cat" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} />
-                    <Button onClick={handleGenerateAvatar} disabled={isGenerating || !aiPrompt}>
-                        <Bot className={cn("mr-2 h-4 w-4", isGenerating && "animate-spin")} />
-                        {isGenerating ? '...' : 'Go'}
-                    </Button>
                 </div>
             </div>
         </div>
