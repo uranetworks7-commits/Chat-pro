@@ -1,0 +1,67 @@
+"use client";
+
+import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
+import type { UserData } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { ref, onValue, off } from 'firebase/database';
+
+interface UserContextType {
+  user: UserData | null;
+  setUser: (user: UserData | null) => void;
+  loading: boolean;
+}
+
+const UserContext = createContext<UserContextType | undefined>(undefined);
+
+export function UserProvider({ children }: { children: ReactNode }) {
+  const [user, setUserState] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem('echosphere_user');
+      if (storedUser) {
+        const parsedUser: UserData = JSON.parse(storedUser);
+        
+        const userRef = ref(db, `users/${parsedUser.username}`);
+        onValue(userRef, (snapshot) => {
+            const updatedUser = snapshot.val();
+            if (updatedUser) {
+                setUserState(updatedUser);
+                localStorage.setItem('echosphere_user', JSON.stringify(updatedUser));
+            }
+        });
+        
+        setUserState(parsedUser);
+      }
+    } catch (error) {
+      console.error("Failed to parse user from localStorage", error);
+      localStorage.removeItem('echosphere_user');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const setUser = (userData: UserData | null) => {
+    setUserState(userData);
+    if (userData) {
+      localStorage.setItem('echosphere_user', JSON.stringify(userData));
+    } else {
+      localStorage.removeItem('echosphere_user');
+    }
+  };
+
+  return (
+    <UserContext.Provider value={{ user, setUser, loading }}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+export function useUser() {
+  const context = useContext(UserContext);
+  if (context === undefined) {
+    throw new Error('useUser must be used within a UserProvider');
+  }
+  return context;
+}
