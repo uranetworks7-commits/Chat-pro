@@ -119,7 +119,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
         updates[`/users/${searchedUser.username}/friendRequests/${user.username}`] = 'pending';
 
         await update(ref(db), updates);
-        toast({ title: `Friend request sent to ${searchedUser.customName}!` });
+        toast({ title: `Friend request sent to ${searchedUser.customName || searchedUser.username}!` });
         setFriendUsername('');
         setSearchedUser(null);
     } catch (error) {
@@ -201,9 +201,9 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
                         <div className="flex items-center gap-3">
                             <Avatar>
                                 <AvatarImage src={searchedUser.profileImageUrl} />
-                                <AvatarFallback>{searchedUser.customName.charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{searchedUser.customName ? searchedUser.customName.charAt(0) : '?'}</AvatarFallback>
                             </Avatar>
-                            <span className="font-medium">{searchedUser.customName}</span>
+                            <span className="font-medium">{searchedUser.customName || searchedUser.username}</span>
                         </div>
                         <Button onClick={handleSendFriendRequest} size="sm">
                             <UserPlus className="mr-2 h-4 w-4" />
