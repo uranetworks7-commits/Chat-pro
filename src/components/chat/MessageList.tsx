@@ -11,7 +11,7 @@ import MessageComponent from './Message';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import ReportDialog from './ReportDialog';
 import { AnimatePresence, motion } from "framer-motion";
-import { blockUser } from '@/lib/utils';
+import { blockUser, unblockUser } from '@/lib/utils';
 import { get, set as dbSet, push, serverTimestamp } from 'firebase/database';
 import { blockedWords } from '@/lib/blocked-words';
 import {
@@ -122,15 +122,31 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
     setReportDialogOpen(true);
   };
   
-  const handleBlock = async (userIdToBlock: string, senderName: string) => {
+  const handleBlock = async (userIdToBlock: string) => {
     const userToBlockRef = ref(db, `users/${userIdToBlock}`);
     const snapshot = await get(userToBlockRef);
     if (snapshot.exists()) {
-        const userToBlock = { ...snapshot.val(), username: userIdToBlock } as UserData;
-        await blockUser(userToBlock, `${senderName} was blocked by a Moderator.`);
+        const userToBlockData = snapshot.val() as UserData
+        const userToBlock = { ...userToBlockData, username: userIdToBlock };
+        await blockUser(userToBlock, `${userToBlock.customName} was blocked by a Moderator.`);
         toast({
             title: "User Blocked",
-            description: `${senderName} has been blocked for 30 minutes.`,
+            description: `${userToBlock.customName} has been blocked for 30 minutes.`,
+        });
+    }
+  }
+
+  const handleUnblock = async (userIdToUnblock: string) => {
+    const userToUnblockRef = ref(db, `users/${userIdToUnblock}`);
+    const snapshot = await get(userToUnblockRef);
+    if (snapshot.exists()) {
+        const userToUnblockData = snapshot.val() as UserData;
+        const userToUnblock = { ...userToUnblockData, username: userIdToUnblock };
+        await unblockUser(userToUnblock, `${userToUnblock.customName} was unblocked by a Moderator.`);
+        toast({
+            title: "User Unblocked",
+            description: `${userToUnblock.customName} can now chat again.`,
+            className: "bg-green-500 text-white",
         });
     }
   }
@@ -218,7 +234,8 @@ export default function MessageList({ chatId, isPrivateChat, otherUserName }: Me
                     message={message}
                     onReport={handleReport}
                     onDelete={handleDeleteRequest}
-                    onBlock={(userId) => handleBlock(userId, message.senderName)}
+                    onBlock={handleBlock}
+                    onUnblock={handleUnblock}
                     onSendFriendRequest={handleSendFriendRequest}
                     isPrivateChat={isPrivateChat}
                 />

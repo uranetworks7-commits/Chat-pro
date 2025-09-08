@@ -1,9 +1,9 @@
 
 "use client";
 
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -18,12 +18,15 @@ import { Button } from '@/components/ui/button';
 import { RoleIcon } from './Icons';
 import { cn } from '@/lib/utils';
 import type { Message, UserData } from '@/lib/types';
+import { db } from '@/lib/firebase';
+import { ref, onValue, off, get } from 'firebase/database';
 
 interface MessageProps {
   message: Message;
   onReport: (message: Message) => void;
   onDelete: (messageId: string) => void;
   onBlock: (userId: string) => void;
+  onUnblock: (userId: string) => void;
   onSendFriendRequest: (userId: string) => void;
   isPrivateChat?: boolean;
 }
@@ -85,13 +88,27 @@ function isValidHttpUrl(string: string) {
   return url.protocol === "http:" || url.protocol === "https:" || url.protocol === "https:";
 }
 
-const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
+const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, isPrivateChat }: MessageProps) => {
   const { user } = useUser();
+  const [senderData, setSenderData] = useState<UserData | null>(null);
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
-
   const showImage = message.imageUrl && isValidHttpUrl(message.imageUrl);
+
+  useEffect(() => {
+    if (canModerate && !isSender) {
+        const userRef = ref(db, `users/${message.senderId}`);
+        const listener = onValue(userRef, (snapshot) => {
+            if (snapshot.exists()) {
+                setSenderData({ ...snapshot.val(), username: message.senderId });
+            }
+        });
+        return () => off(userRef, 'value', listener);
+    }
+  }, [canModerate, isSender, message.senderId]);
+
+  const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
 
   return (
     <div className={cn('flex items-start gap-3 p-3 my-1 rounded-lg transition-colors group', isSender ? 'flex-row-reverse' : 'flex-row')}>
@@ -145,7 +162,11 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRe
                 {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
                 {(canModerate || isSender) && <DropdownMenuSeparator />}
                 {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
-                {canModerate && !isSender && !isPrivateChat && <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>}
+                {canModerate && !isSender && !isPrivateChat && (
+                    isSenderBlocked 
+                        ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
+                        : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block for 30 min</span></DropdownMenuItem>
+                )}
                 </DropdownMenuContent>
             </DropdownMenu>
         </div>
