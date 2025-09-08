@@ -15,6 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from './Icons';
 import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff } from 'lucide-react';
 import type { UserData } from '@/lib/types';
+import { useBackground } from '@/context/BackgroundContext';
 
 interface ProfileSheetProps {
   open: boolean;
@@ -34,6 +35,8 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [searchedUser, setSearchedUser] = useState<UserData | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const { background, setBackground } = useBackground();
+
 
   useEffect(() => {
     if (!user) return;
@@ -202,6 +205,21 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
                     <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl}>Set</Button>
                 </div>
             </div>
+        </div>
+        <Separator />
+         <div className="py-4 spacey-y-4">
+            <h3 className="font-semibold text-foreground">Change Background</h3>
+             <div className="flex justify-between gap-2">
+                <Button variant={background === 'bg-chat-1' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-1')} className="flex-1">
+                    <ImageIcon className="mr-2 h-4 w-4"/> Image 1
+                </Button>
+                <Button variant={background === 'bg-chat-2' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-2')} className="flex-1">
+                    <ImageIcon className="mr-2 h-4 w-4"/> Image 2
+                </Button>
+                <Button variant={background === 'bg-chat-none' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-none')}>
+                    <ImageOff className="mr-2 h-4 w-4"/> None
+                </Button>
+             </div>
         </div>
         <Separator />
          <div className="py-4 spacey-y-4">

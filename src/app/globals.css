@@ -92,7 +92,19 @@ body {
 }
 
 .chat-bg {
-    background-image: url('https://files.catbox.moe/rignzh.jpg');
     background-size: cover;
     background-position: center;
+}
+
+.bg-chat-1 {
+  background-image: url('https://files.catbox.moe/dri57s.jpg');
+}
+
+.bg-chat-2 {
+  background-image: url('https://files.catbox.moe/rignzh.jpg');
+}
+
+.bg-chat-none {
+  background-image: none;
+  background-color: hsl(var(--background) / 0.9);
 }

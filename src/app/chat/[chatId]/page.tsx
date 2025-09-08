@@ -15,6 +15,8 @@ import MessageInput from '@/components/chat/MessageInput';
 import TypingIndicator from '@/components/chat/TypingIndicator';
 import type { UserData } from '@/lib/types';
 import SplashScreen from '@/components/chat/SplashScreen';
+import { useBackground } from '@/context/BackgroundContext';
+import { cn } from '@/lib/utils';
 
 interface ChatHeaderProps {
   otherUser: UserData | null;
@@ -56,6 +58,7 @@ export default function PrivateChatPage() {
   const { chatId } = useParams() as { chatId: string };
   const { user, loading } = useUser();
   const [otherUser, setOtherUser] = useState<UserData | null>(null);
+  const { background } = useBackground();
   
   useEffect(() => {
     if (!chatId || !user) return;
@@ -101,7 +104,7 @@ export default function PrivateChatPage() {
     <main className="h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
         <div className="h-full w-full max-w-4xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border">
             <ChatHeader otherUser={otherUser} />
-            <div className="flex-1 flex flex-col chat-bg min-h-0">
+            <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} />
                 <TypingIndicator chatId={chatId} />
             </div>
