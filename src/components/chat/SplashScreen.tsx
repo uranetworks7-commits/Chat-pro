@@ -1,7 +1,8 @@
+
 "use client";
 
 import { motion } from 'framer-motion';
-import { Bell } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 export default function SplashScreen() {
   return (
@@ -14,12 +15,13 @@ export default function SplashScreen() {
       >
         <motion.div
             animate={{ 
-                rotate: [0, -25, 25, -25, 25, 0],
-                transition: { duration: 0.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 1 }
+                rotate: [0, -15, 15, -15, 15, 0],
+                y: [0, -10, 0],
+                transition: { duration: 1.2, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 }
             }}
             className="p-4 bg-primary rounded-full"
         >
-            <Bell className="h-12 w-12 text-primary-foreground" />
+            <MessageCircle className="h-12 w-12 text-primary-foreground" />
         </motion.div>
         <h1 className="text-3xl font-bold font-headline text-primary">Public Chat</h1>
         <div className="w-24 h-1 bg-muted rounded-full overflow-hidden">

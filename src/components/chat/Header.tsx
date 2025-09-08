@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
 import { ref, onValue, off } from 'firebase/database';
-import { User, Bell, Users } from 'lucide-react';
+import { User, Users, MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ProfileSheet from './ProfileSheet';
 import FriendsSheet from './FriendsSheet';
@@ -42,7 +42,7 @@ export default function Header() {
       <header className="flex items-center justify-between p-2 border-b bg-card/80">
         <div className="flex items-center gap-2">
            <div className="p-1.5 bg-primary rounded-full">
-            <Bell className="h-4 w-4 text-primary-foreground" />
+            <MessageCircle className="h-4 w-4 text-primary-foreground" />
            </div>
           <h1 className="text-lg font-bold font-headline text-primary">Public Chat</h1>
         </div>
