@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -96,7 +97,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
         const snapshot = await get(userRef);
         if (snapshot.exists()) {
             const recipientData = snapshot.val() as UserData;
-            setSearchedUser({ ...recipientData, username: snapshot.key });
+            setSearchedUser({ ...recipientData, username: snapshot.key! });
         } else {
             toast({ title: 'User not found.', variant: 'destructive' });
             setSearchedUser(null);

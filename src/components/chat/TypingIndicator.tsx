@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -15,13 +16,14 @@ export default function TypingIndicator({ chatId }: TypingIndicatorProps) {
   const { user } = useUser();
 
   useEffect(() => {
+    if (!user) return;
     const typingRef = ref(db, `typing/${chatId || 'public'}`);
     const listener = onValue(typingRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
         const currentTypingUsers = Object.entries(data)
-          .map(([key, value]: [string, any]) => value.name)
-          .filter(name => name !== user?.customName); 
+          .filter(([key, _]) => key !== user.username)
+          .map(([_, value]: [string, any]) => value.name)
         setTypingUsers(currentTypingUsers);
       } else {
         setTypingUsers([]);
@@ -29,7 +31,7 @@ export default function TypingIndicator({ chatId }: TypingIndicatorProps) {
     });
 
     return () => off(typingRef, 'value', listener);
-  }, [chatId, user?.customName]);
+  }, [chatId, user]);
 
   const getTypingText = () => {
     if (typingUsers.length === 0) return null;

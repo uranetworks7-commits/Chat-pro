@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
@@ -100,30 +101,32 @@ export default function MessageInput({ chatId }: MessageInputProps) {
         const participantIds = chatId.split('_');
         
         const otherParticipantId = participantIds.find(id => id !== user.username);
-        const otherUserRef = ref(db, `users/${otherParticipantId}`);
-        const currentUserRef = ref(db, `users/${user.username}`);
-        
-        const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
+        if (otherParticipantId) {
+            const otherUserRef = ref(db, `users/${otherParticipantId}`);
+            const currentUserRef = ref(db, `users/${user.username}`);
+            
+            const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
 
-        if(otherUserSnap.exists() && currentUserSnap.exists()){
-            const otherUser = otherUserSnap.val() as UserData;
-            const currentUser = currentUserSnap.val() as UserData;
+            if(otherUserSnap.exists() && currentUserSnap.exists()){
+                const otherUser = otherUserSnap.val() as UserData;
+                const currentUser = currentUserSnap.val() as UserData;
 
-            const metadataUpdate: any = {
-                lastMessage: isSendingImage ? 'Image' : messageText,
-                timestamp: serverTimestamp(),
-                participants: {
-                    [user.username]: {
-                        customName: currentUser.customName,
-                        profileImageUrl: currentUser.profileImageUrl
-                    },
-                    [otherParticipantId!]: {
-                        customName: otherUser.customName,
-                        profileImageUrl: otherUser.profileImageUrl
+                const metadataUpdate: any = {
+                    lastMessage: isSendingImage ? 'Image' : messageText,
+                    timestamp: serverTimestamp(),
+                    participants: {
+                        [user.username]: {
+                            customName: currentUser.customName,
+                            profileImageUrl: currentUser.profileImageUrl
+                        },
+                        [otherParticipantId!]: {
+                            customName: otherUser.customName,
+                            profileImageUrl: otherUser.profileImageUrl
+                        }
                     }
-                }
-            };
-            await update(chatMetadataRef, metadataUpdate);
+                };
+                await update(chatMetadataRef, metadataUpdate);
+            }
         }
       }
 
