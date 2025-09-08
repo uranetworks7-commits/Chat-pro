@@ -273,84 +273,83 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   return (
     <>
     <Confetti fire={fireConfetti} />
-    <div className={cn('flex flex-col gap-1 p-2 my-2 rounded-lg transition-colors group', isSender ? 'items-end' : 'items-start')}>
-      <div className={cn('flex items-start gap-3', isSender ? 'flex-row-reverse' : 'flex-row')}>
-        <Avatar className="h-8 w-8 border-2 border-muted">
-          <AvatarImage src={message.senderProfileUrl} />
-          <AvatarFallback>
-            <RoleIcon role={senderRole} />
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex flex-col" style={{ alignItems: isSender ? 'flex-end' : 'flex-start'}}>
-            <div className="flex items-center gap-1.5">
-                <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
-                    {message.senderName}
-                </span>
-                {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
-            </div>
-            
-            <Popover open={showReactionPopup} onOpenChange={setShowReactionPopup}>
-                <PopoverTrigger asChild>
-                    <div 
-                        {...longPressProps}
-                        className={cn(
-                            'max-w-md w-fit rounded-lg p-3 relative shadow-md mt-1', 
-                            isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
-                        )}
-                    >
-                        <ReplyPreview replyTo={message.replyTo} />
-                        <div className={cn("text-base break-words p-2", message.replyTo ? 'pt-2' : '')}>
-                            {message.text && parseAndRenderMessage(message.text)}
-                        </div>
-                        
-                        {hasMedia && <div className="p-2"><MediaContent url={message.imageUrl!} /></div>}
-                        
-                        {showLikeButton && (
-                            <div className="mt-2 flex items-center gap-2">
-                                <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    onClick={handleLike}
-                                    disabled={hasLiked && user?.role === 'user'}
-                                    className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
-                                >
-                                    <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
-                                </Button>
-                                {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
-                            </div>
-                        )}
+    <div className={cn('flex items-start gap-3 p-2 my-1 group', isSender ? 'flex-row-reverse' : 'flex-row')}>
+      <Avatar className="h-8 w-8 border-2 border-muted">
+        <AvatarImage src={message.senderProfileUrl} />
+        <AvatarFallback>
+          <RoleIcon role={senderRole} />
+        </AvatarFallback>
+      </Avatar>
 
-                        {message.reactions && Object.keys(message.reactions).length > 0 && (
-                            <div className="flex gap-1 flex-wrap mt-1">
-                                {Object.entries(message.reactions).map(([emoji, users]) => (
-                                    <div key={emoji} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-background/20 text-xs">
-                                        <span>{emoji}</span>
-                                        <span className="font-bold">{users.length}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                        
-                        <div className={cn("text-xs text-muted-foreground mt-2", isSender ? 'text-right' : 'text-left')}>
-                            {format(new Date(message.timestamp), 'p')}
-                        </div>
+      <div className={cn("flex flex-col w-fit max-w-md", isSender ? 'items-end' : 'items-start')}>
+        <div className="flex items-center gap-1.5">
+            <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
+                {message.senderName}
+            </span>
+            {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
+        </div>
+        
+        <Popover open={showReactionPopup} onOpenChange={setShowReactionPopup}>
+            <PopoverTrigger asChild>
+                <div 
+                    {...longPressProps}
+                    className={cn(
+                        'rounded-lg p-3 relative shadow-md mt-1', 
+                        isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
+                    )}
+                >
+                    <ReplyPreview replyTo={message.replyTo} />
+                    <div className={cn("text-base break-words", message.replyTo ? 'pt-2' : '')}>
+                        {message.text && parseAndRenderMessage(message.text)}
                     </div>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-1 rounded-full">
-                    <div className="flex gap-1">
-                        {EMOJI_REACTIONS.map(emoji => (
-                            <Button key={emoji} variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
-                                {emoji}
+                    
+                    {hasMedia && <div className=""><MediaContent url={message.imageUrl!} /></div>}
+                    
+                    {showLikeButton && (
+                        <div className="mt-2 flex items-center gap-2">
+                            <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={handleLike}
+                                disabled={hasLiked && user?.role === 'user'}
+                                className="h-auto p-1 text-xs bg-background/20 hover:bg-background/40"
+                            >
+                                <Heart className={cn("h-4 w-4", hasLiked ? "text-red-500 fill-current" : "text-white")} />
                             </Button>
-                        ))}
-                    </div>
-                </PopoverContent>
-            </Popover>
+                            {message.likes && message.likes > 0 && <span className="text-xs font-bold">{message.likes}</span>}
+                        </div>
+                    )}
+                </div>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-1 rounded-full">
+                <div className="flex gap-1">
+                    {EMOJI_REACTIONS.map(emoji => (
+                        <Button key={emoji} variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
+                            {emoji}
+                        </Button>
+                    ))}
+                </div>
+            </PopoverContent>
+        </Popover>
 
+        {message.reactions && Object.keys(message.reactions).length > 0 && (
+            <div className="flex gap-1 flex-wrap mt-1 px-2">
+                {Object.entries(message.reactions).map(([emoji, users]) => (
+                    <div key={emoji} className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-secondary text-xs">
+                        <span className="text-xs">{emoji}</span>
+                        <span className="text-xs font-bold">{users.length}</span>
+                    </div>
+                ))}
+            </div>
+        )}
+
+        <div className={cn("text-[0.6rem] text-muted-foreground mt-1 px-2", isSender ? 'text-right' : 'text-left')}>
+            {format(new Date(message.timestamp), 'p')}
         </div>
-        <div className="self-start pt-6">
-            <MessageOptions />
-        </div>
+      </div>
+
+      <div className="self-start pt-6 opacity-0 group-hover:opacity-100 transition-opacity">
+        <MessageOptions />
       </div>
     </div>
     </>
@@ -358,3 +357,4 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
+
