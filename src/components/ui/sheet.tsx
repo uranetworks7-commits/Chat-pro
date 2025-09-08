@@ -4,6 +4,7 @@ import * as React from "react"
 import * as SheetPrimitive from "@radix-ui/react-dialog"
 import { cva, type VariantProps } from "class-variance-authority"
 import { X } from "lucide-react"
+import { motion } from 'framer-motion';
 
 import { cn } from "@/lib/utils"
 
@@ -56,22 +57,47 @@ interface SheetContentProps
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
->(({ side = "right", className, children, ...props }, ref) => (
-  <SheetPortal>
-    <SheetOverlay />
-    <SheetPrimitive.Content
-      ref={ref}
-      className={cn(sheetVariants({ side }), className)}
-      {...props}
-    >
-      {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
-    </SheetPrimitive.Content>
-  </SheetPortal>
-))
+>(({ side = "right", className, children, ...props }, ref) => {
+    const onDragEnd = (event: any, info: any) => {
+        const velocity = side === 'left' ? info.velocity.x : -info.velocity.x;
+        const offset = side === 'left' ? info.offset.x : -info.offset.x;
+
+        if (offset > window.innerWidth / 3 || velocity > 500) {
+            const closeButton = (event.target as HTMLElement).closest('[data-radix-dialog-content]')?.querySelector('[data-radix-dialog-close]');
+            (closeButton as HTMLElement)?.click();
+        }
+    };
+    
+    const dragConstraints = side === 'right' ? { left: 0 } : { right: 0 };
+    const dragDirection = side === 'right' ? 'x' : 'x';
+
+
+    return(
+      <SheetPortal>
+        <SheetOverlay />
+        <SheetPrimitive.Content
+          ref={ref}
+          className={cn(sheetVariants({ side }), className, 'p-0')} // Remove padding here
+          {...props}
+          asChild
+        >
+          <motion.div
+              drag={dragDirection}
+              dragConstraints={dragConstraints}
+              onDragEnd={onDragEnd}
+              dragElastic={{ top: 0, bottom: 0, left: 0.5, right: 0.5 }}
+              className={cn(sheetVariants({ side }), className, "p-6")} // Add padding back to motion div
+              >
+            {children}
+            <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </SheetPrimitive.Close>
+          </motion.div>
+        </SheetPrimitive.Content>
+      </SheetPortal>
+    )
+})
 SheetContent.displayName = SheetPrimitive.Content.displayName
 
 const SheetHeader = ({
