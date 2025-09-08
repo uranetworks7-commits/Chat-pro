@@ -147,8 +147,8 @@ export default function MessageInput({ chatId }: MessageInputProps) {
             const [otherUserSnap, currentUserSnap] = await Promise.all([get(otherUserRef), get(currentUserRef)]);
 
             if(otherUserSnap.exists() && currentUserSnap.exists()){
-                const otherUser = otherUserSnap.val() as UserData;
-                const currentUser = currentUserSnap.val() as UserData;
+                const otherUser = { ...otherUserSnap.val(), username: otherParticipantId } as UserData;
+                const currentUser = { ...currentUserSnap.val(), username: user.username } as UserData;
 
                 messagePayload.role = currentUser.role;
 
@@ -156,7 +156,7 @@ export default function MessageInput({ chatId }: MessageInputProps) {
                     lastMessage: isSendingMedia ? 'Media' : messageText,
                     timestamp: serverTimestamp(),
                     participants: {
-                        [user.username]: {
+                        [currentUser.username]: {
                             customName: currentUser.customName,
                             profileImageUrl: currentUser.profileImageUrl
                         },
