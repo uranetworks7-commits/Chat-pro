@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { db } from '@/lib/firebase';
-import { ref, onValue, off, remove } from 'firebase/database';
+import { ref, onValue, off, remove, update } from 'firebase/database';
 import { useUser } from '@/context/UserContext';
 import { useToast } from '@/hooks/use-toast';
 import type { Message, UserData } from '@/lib/types';
@@ -91,6 +91,29 @@ export default function MessageList() {
     }
   }
 
+  const handleSendFriendRequest = async (recipientId: string) => {
+    if (!user) {
+        toast({ title: 'You must be logged in to send friend requests.', variant: 'destructive' });
+        return;
+    }
+    if (user.username === recipientId) {
+        toast({ title: "You can't send a friend request to yourself.", variant: 'destructive' });
+        return;
+    }
+
+    try {
+        const updates: any = {};
+        updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
+        updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
+
+        await update(ref(db), updates);
+        toast({ title: 'Friend request sent!' });
+    } catch (error) {
+        console.error("Error sending friend request:", error);
+        toast({ title: 'Failed to send friend request.', variant: 'destructive' });
+    }
+  };
+
   const handleReportSubmit = async (reason: string) => {
     if (!messageToReport) return;
     const reportsRef = ref(db, `reports/${messageToReport.id}`);
@@ -132,6 +155,7 @@ export default function MessageList() {
                     onReport={handleReport}
                     onDelete={handleDelete}
                     onBlock={(userId) => handleBlock(userId, message.senderName)}
+                    onSendFriendRequest={handleSendFriendRequest}
                 />
             </motion.div>
           ))}

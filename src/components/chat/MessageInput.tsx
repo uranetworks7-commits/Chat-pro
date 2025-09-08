@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, ImagePlus } from 'lucide-react';
+import { Send, ImagePlus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
@@ -9,11 +9,13 @@ import { db } from '@/lib/firebase';
 import { ref, push, set, serverTimestamp, onDisconnect, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { blockUser } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 const abusiveWords = ["abusive", "hacking"];
 
 export default function MessageInput() {
   const [text, setText] = useState('');
+  const [isSendingImage, setIsSendingImage] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
@@ -32,7 +34,7 @@ export default function MessageInput() {
   }, [typingStatusRef]);
 
   const handleTyping = (isTyping: boolean) => {
-    if (!user || !typingStatusRef) return;
+    if (!user || !typingStatusRef || isSendingImage) return;
     if (isTyping) {
       set(typingStatusRef, { name: user.customName });
       clearTimeout(typingRef.current);
@@ -72,16 +74,26 @@ export default function MessageInput() {
 
     try {
       const messagesRef = ref(db, 'public_chat');
-      await push(messagesRef, {
-        text: messageText,
+      const messagePayload: any = {
         senderId: user.username,
         senderName: user.customName,
         senderProfileUrl: user.profileImageUrl,
         role: user.role,
         timestamp: serverTimestamp(),
-      });
+      };
+
+      if (isSendingImage) {
+        messagePayload.imageUrl = messageText;
+      } else {
+        messagePayload.text = messageText;
+      }
+      
+      await push(messagesRef, messagePayload);
+
       setText('');
+      if(isSendingImage) setIsSendingImage(false);
       handleTyping(false);
+
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
@@ -91,30 +103,11 @@ export default function MessageInput() {
       });
     }
   };
-  
-  const handleImageSend = () => {
-    const imageUrl = prompt("Please enter the image URL:");
-    if (!imageUrl || !user) return;
 
-    try {
-        const messagesRef = ref(db, 'public_chat');
-        push(messagesRef, {
-            imageUrl: imageUrl,
-            senderId: user.username,
-            senderName: user.customName,
-            senderProfileUrl: user.profileImageUrl,
-            role: user.role,
-            timestamp: serverTimestamp(),
-        });
-    } catch (error) {
-        console.error('Error sending image:', error);
-        toast({
-            title: "Error",
-            description: "Failed to send image.",
-            variant: "destructive",
-        });
-    }
-  };
+  const toggleImageMode = () => {
+    setIsSendingImage(!isSendingImage);
+    setText('');
+  }
 
   return (
     <div className="p-4 border-t bg-card/80">
@@ -123,7 +116,9 @@ export default function MessageInput() {
           value={text}
           onChange={(e) => {
             setText(e.target.value);
-            handleTyping(true);
+            if (!isSendingImage) {
+              handleTyping(true);
+            }
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -131,12 +126,12 @@ export default function MessageInput() {
               handleSendMessage();
             }
           }}
-          placeholder="Type your message..."
-          className="pr-24 rounded-full bg-background"
+          placeholder={isSendingImage ? 'Enter your image URL...' : 'Type your message...'}
+          className={cn("pr-24 bg-background", "text-base md:text-sm h-12 md:h-auto")}
         />
         <div className="absolute top-1/2 right-3 -translate-y-1/2 flex gap-1">
-          <Button variant="ghost" size="icon" onClick={handleImageSend}>
-            <ImagePlus className="h-5 w-5" />
+          <Button variant="ghost" size="icon" onClick={toggleImageMode}>
+            {isSendingImage ? <X className="h-5 w-5" /> : <ImagePlus className="h-5 w-5" />}
           </Button>
           <Button size="icon" onClick={handleSendMessage} disabled={!text.trim()}>
             <Send className="h-5 w-5" />

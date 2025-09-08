@@ -9,10 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { useUser } from '@/context/UserContext';
 import { db } from '@/lib/firebase';
-import { ref, set, serverTimestamp } from 'firebase/database';
+import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from './Icons';
-import { Check, X } from 'lucide-react';
+import { Check, X, UserPlus } from 'lucide-react';
 
 interface ProfileSheetProps {
   open: boolean;
@@ -23,6 +23,7 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
   const { user, setUser } = useUser();
   const { toast } = useToast();
   const [newAvatarUrl, setNewAvatarUrl] = useState('');
+  const [friendName, setFriendName] = useState('');
 
   const handleUpdateAvatar = async () => {
     if (!user || !newAvatarUrl) return;
@@ -32,6 +33,48 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
     setUser(updatedUser);
     toast({ title: 'Avatar updated successfully!' });
     setNewAvatarUrl('');
+  };
+
+  const handleSendFriendRequestByName = async () => {
+    if (!friendName.trim() || !user) return;
+    if (friendName.trim() === user.customName) {
+        toast({ title: "You can't add yourself!", variant: 'destructive' });
+        return;
+    }
+
+    const usersRef = ref(db, 'users');
+    const userQuery = query(usersRef, orderByChild('customName'), equalTo(friendName.trim()));
+
+    try {
+        const snapshot = await get(userQuery);
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+            const recipientId = Object.keys(data)[0];
+            const recipientData = data[recipientId];
+            
+            if (!recipientData || !recipientId) {
+                toast({ title: 'User not found.', variant: 'destructive' });
+                return;
+            }
+
+            const senderRef = ref(db, `users/${user.username}/friendRequests/${recipientId}`);
+            const receiverRef = ref(db, `users/${recipientId}/friendRequests/${user.username}`);
+            
+            const updates: any = {};
+            updates[`/users/${user.username}/friendRequests/${recipientId}`] = 'sent';
+            updates[`/users/${recipientId}/friendRequests/${user.username}`] = 'pending';
+
+            await update(ref(db), updates);
+
+            toast({ title: 'Friend request sent!' });
+            setFriendName('');
+        } else {
+            toast({ title: 'User not found.', variant: 'destructive' });
+        }
+    } catch (error) {
+        console.error("Error sending friend request:", error);
+        toast({ title: 'Failed to send friend request.', variant: 'destructive' });
+    }
   };
   
   // TODO: Add friend request logic
@@ -65,6 +108,19 @@ export default function ProfileSheet({ open, onOpenChange }: ProfileSheetProps) 
                 <div className="flex gap-2">
                     <Input id="avatar-url" placeholder="https://..." value={newAvatarUrl} onChange={(e) => setNewAvatarUrl(e.target.value)} />
                     <Button onClick={handleUpdateAvatar} disabled={!newAvatarUrl}>Set</Button>
+                </div>
+            </div>
+        </div>
+        <Separator />
+         <div className="py-4 space-y-4">
+            <h3 className="font-semibold text-foreground">Add Friend</h3>
+            <div className="space-y-2">
+                <Label htmlFor="friend-name">Username</Label>
+                <div className="flex gap-2">
+                    <Input id="friend-name" placeholder="Enter a username..." value={friendName} onChange={(e) => setFriendName(e.target.value)} />
+                    <Button onClick={handleSendFriendRequestByName} disabled={!friendName.trim()} size="icon">
+                        <UserPlus />
+                    </Button>
                 </div>
             </div>
         </div>

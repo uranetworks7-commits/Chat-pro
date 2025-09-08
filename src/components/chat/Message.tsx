@@ -22,6 +22,7 @@ interface MessageProps {
   onReport: (message: Message) => void;
   onDelete: (messageId: string) => void;
   onBlock: (userId: string) => void;
+  onSendFriendRequest: (userId: string) => void;
 }
 
 const roleStyles = {
@@ -71,7 +72,7 @@ function parseAndRenderMessage(text: string) {
     });
 }
 
-const MessageComponent = ({ message, onReport, onDelete, onBlock }: MessageProps) => {
+const MessageComponent = ({ message, onReport, onDelete, onBlock, onSendFriendRequest }: MessageProps) => {
   const { user } = useUser();
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
@@ -117,7 +118,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock }: MessageProps
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={isSender ? "end" : "start"}>
-                {!isSender && <DropdownMenuItem><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+                {!isSender && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
                 {!isSender && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
                 {(canModerate || isSender) && <DropdownMenuSeparator />}
                 {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
