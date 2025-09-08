@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -23,7 +24,7 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm p-2 sm:p-0">
+    <main className="h-screen w-screen flex flex-col items-center justify-center bg-background/80 backdrop-blur-sm">
       {!user ? <SetupName /> : <ChatInterface />}
     </main>
   );
