@@ -34,7 +34,7 @@ export default function ChatInterface() {
       <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
         <MessageList isPrivateChat={false} onReply={handleReply} />
       </div>
-      <div className="mb-4">
+      <div className="mb-6">
         <TypingIndicator />
         <MessageInput ref={inputRef} replyTo={replyTo} onCancelReply={cancelReply} />
       </div>

@@ -171,7 +171,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
   }
 
   return (
-    <div className="px-3 bg-card/80">
+    <div className="px-3">
       {replyTo && (
         <div className="flex items-center justify-between p-2 rounded-t-md bg-secondary text-sm mb-1">
             <div className="flex items-center gap-2 overflow-hidden">
