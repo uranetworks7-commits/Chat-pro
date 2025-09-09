@@ -15,6 +15,8 @@ export default function ChatInterface() {
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
   const [replyTo, setReplyTo] = React.useState<Message | null>(null);
 
+  const isUrlBackground = background.startsWith('url(');
+
   const handleFocusInput = () => {
     inputRef.current?.focus();
   };
@@ -31,7 +33,10 @@ export default function ChatInterface() {
   return (
     <div className="h-[100vh] w-full max-w-6xl flex flex-col bg-card/70 backdrop-blur-md shadow-2xl border mx-auto">
       <Header onFocusInput={handleFocusInput} />
-      <div className={cn("flex-1 flex flex-col chat-bg min-h-0", background)}>
+      <div 
+        className={cn("flex-1 flex flex-col chat-bg min-h-0", !isUrlBackground && background)}
+        style={isUrlBackground ? { backgroundImage: background } : {}}
+      >
         <MessageList isPrivateChat={false} onReply={handleReply} />
       </div>
       <div className="mb-6">

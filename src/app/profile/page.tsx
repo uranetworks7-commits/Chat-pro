@@ -13,10 +13,11 @@ import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from '@/components/chat/Icons';
-import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff, ArrowLeft } from 'lucide-react';
+import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff, ArrowLeft, PaintBrush } from 'lucide-react';
 import type { UserData } from '@/lib/types';
 import { useBackground } from '@/context/BackgroundContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import Link from 'next/link';
 
 interface FriendRequest {
     id: string;
@@ -219,15 +220,21 @@ export default function ProfilePage() {
                   <h3 className="font-semibold text-foreground">Change Background</h3>
                    <div className="flex justify-between gap-2">
                       <Button variant={background === 'bg-chat-1' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-1')} className="flex-1">
-                          <ImageIcon className="mr-2 h-4 w-4"/> Image 1
+                          <ImageIcon className="mr-2 h-4 w-4"/> Preset 1
                       </Button>
                       <Button variant={background === 'bg-chat-2' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-2')} className="flex-1">
-                          <ImageIcon className="mr-2 h-4 w-4"/> Image 2
+                          <ImageIcon className="mr-2 h-4 w-4"/> Preset 2
                       </Button>
                       <Button variant={background === 'bg-chat-none' ? 'default' : 'outline'} onClick={() => setBackground('bg-chat-none')} className="px-4">
                           <ImageOff className="mr-2 h-4 w-4"/> None
                       </Button>
                    </div>
+                   <Button asChild variant="outline" className="w-full mt-2">
+                      <Link href="/profile/background">
+                          <PaintBrush className="mr-2 h-4 w-4" />
+                          Add Custom Background
+                      </Link>
+                   </Button>
               </div>
               <Separator />
                <div className="py-4 space-y-3">

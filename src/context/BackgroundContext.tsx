@@ -3,7 +3,7 @@
 
 import { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 
-type BackgroundValue = 'bg-chat-1' | 'bg-chat-2' | 'bg-chat-none';
+type BackgroundValue = string; // Can be a class name or a url()
 
 interface BackgroundContextType {
   background: BackgroundValue;
@@ -18,7 +18,7 @@ export function BackgroundProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const storedBackground = localStorage.getItem('publicchat_background') as BackgroundValue;
+      const storedBackground = localStorage.getItem('publicchat_background');
       if (storedBackground) {
         setBackgroundState(storedBackground);
       }
@@ -36,6 +36,10 @@ export function BackgroundProvider({ children }: { children: ReactNode }) {
         setBackgroundState(newBackground);
       } catch (error) {
         console.error("Failed to save background to localStorage", error);
+        // Handle potential storage errors, e.g., quota exceeded
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+           alert("Could not save the background. Your browser storage might be full. Please clear some space and try again.");
+        }
       }
     }
   };
