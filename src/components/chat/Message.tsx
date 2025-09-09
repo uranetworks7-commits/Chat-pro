@@ -69,37 +69,21 @@ function parseAndRenderMessage(text: string) {
   
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
-        let buttonText = "Visit Site";
-        let Icon = LinkIcon;
-        let variant: "default" | "secondary" | "destructive" = "secondary";
-        
         try {
             const url = new URL(part);
             const extension = url.pathname.split('.').pop()?.toLowerCase();
             
-            if (mediaExtensions.video.includes(extension!)) {
-                // Videos are handled by MediaContent.
-                return null;
-            } else if (mediaExtensions.audio.includes(extension!)) {
-                // Audio is handled by MediaContent with the new AudioPlayer,
-                // so we don't render a button for them.
-                return null;
-            } else if (mediaExtensions.image.includes(extension!)) {
-                // Images are also handled by MediaContent.
+            if (mediaExtensions.image.includes(extension!) || 
+                mediaExtensions.video.includes(extension!) || 
+                mediaExtensions.audio.includes(extension!)) {
+                // These are handled by MediaContent, so don't render anything here
                 return null;
             }
         } catch (e) {
             // Not a valid URL, treat as text
         }
-  
-        return (
-          <Button key={index} asChild variant={variant} size="sm" className="my-2 h-auto py-2 text-xs">
-            <a href={part} target="_blank" rel="noopener noreferrer">
-              <Icon className="mr-2 h-4 w-4" />
-              {buttonText}
-            </a>
-          </Button>
-        );
+        // General URLs are now handled outside this function
+        return null;
       }
       return <p key={index} className="whitespace-pre-wrap break-words">{part}</p>;
     });
@@ -146,6 +130,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const [senderData, setSenderData] = useState<UserData | null>(null);
   const [fireConfetti, setFireConfetti] = useState(false);
   const [showReactionPopup, setShowReactionPopup] = useState(false);
+  const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
 
   const isSender = user?.username === message.senderId;
   const senderRole = message.role || 'user';
@@ -161,6 +146,20 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     captureEvent: true,
     cancelOnMovement: true,
   });
+
+  useEffect(() => {
+    if (message.text) {
+        const urlRegex = /(https?:\/\/[^\s]+)/g;
+        const match = message.text.match(urlRegex);
+        if (match && match[0] && !getMediaType(match[0])) {
+            setDetectedUrl(match[0]);
+        } else {
+            setDetectedUrl(null);
+        }
+    } else {
+        setDetectedUrl(null);
+    }
+  }, [message.text]);
 
   useEffect(() => {
     if (canModerate && !isSender) {
@@ -339,6 +338,15 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 </div>
             </PopoverContent>
         </Popover>
+
+        {detectedUrl && (
+            <Button asChild variant="secondary" size="sm" className="mt-1.5 h-auto py-2 text-xs">
+                <a href={detectedUrl} target="_blank" rel="noopener noreferrer">
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    Visit Site
+                </a>
+            </Button>
+        )}
 
         {showLikeButton && (
             <div className="mt-1.5 flex items-center gap-2">
