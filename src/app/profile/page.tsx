@@ -13,7 +13,7 @@ import { db } from '@/lib/firebase';
 import { ref, set, serverTimestamp, query, orderByChild, equalTo, get, update, onValue, off, remove } from 'firebase/database';
 import { useToast } from '@/hooks/use-toast';
 import { RoleIcon } from '@/components/chat/Icons';
-import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff, ArrowLeft, PaintBrush } from 'lucide-react';
+import { Check, X, UserPlus, Search, LogOut, ImageIcon, ImageOff, ArrowLeft, Paintbrush } from 'lucide-react';
 import type { UserData } from '@/lib/types';
 import { useBackground } from '@/context/BackgroundContext';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -231,7 +231,7 @@ export default function ProfilePage() {
                    </div>
                    <Button asChild variant="outline" className="w-full mt-2">
                       <Link href="/profile/background">
-                          <PaintBrush className="mr-2 h-4 w-4" />
+                          <Paintbrush className="mr-2 h-4 w-4" />
                           Add Custom Background
                       </Link>
                    </Button>
@@ -288,3 +288,5 @@ export default function ProfilePage() {
     </main>
   );
 }
+
+    
