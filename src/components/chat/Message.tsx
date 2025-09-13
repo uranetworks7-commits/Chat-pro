@@ -39,6 +39,7 @@ interface MessageProps {
   onUnblock: (userId: string) => void;
   onSendFriendRequest: (userId: string) => void;
   onReply: (message: Message) => void;
+  onClick?: (e: React.MouseEvent<HTMLDivElement>) => void;
   isPrivateChat?: boolean;
 }
 
@@ -124,7 +125,7 @@ const MediaContent = ({ url }: { url: string }) => {
 };
 
 
-const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, onReply, isPrivateChat }: MessageProps) => {
+const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onSendFriendRequest, onReply, isPrivateChat, onClick }: MessageProps) => {
   const { user } = useUser();
   const { toast } = useToast();
   const [senderData, setSenderData] = useState<UserData | null>(null);
@@ -288,7 +289,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   return (
     <>
     <Confetti fire={fireConfetti} />
-    <div className={cn('flex items-start gap-3 p-2 my-1', isSender ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('flex items-start gap-3 p-2 my-1', isSender ? 'flex-row-reverse' : 'flex-row')} onClick={onClick}>
       <Avatar className="h-8 w-8 border-2 border-muted">
         <AvatarImage src={message.senderProfileUrl} />
         <AvatarFallback>
@@ -381,7 +382,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 };
 
 export default memo(MessageComponent);
-
-    
-
-    

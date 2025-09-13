@@ -29,6 +29,8 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
 
   const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
+  const internalRef = (ref as React.RefObject<HTMLTextAreaElement>) || React.createRef<HTMLTextAreaElement>();
+
   useEffect(() => {
     if (typingStatusRef) {
       const onDisconnectRef = onDisconnect(typingStatusRef);
@@ -170,6 +172,10 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
     return "Type your message...";
   }
 
+  const focusInput = () => {
+      internalRef.current?.focus();
+  }
+
   return (
     <div className="px-3">
       {replyTo && (
@@ -186,9 +192,12 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
             </Button>
         </div>
       )}
-      <div className="flex items-end gap-2">
+      <div 
+        className="flex items-end gap-2 p-1.5 rounded-lg bg-background border cursor-text"
+        onClick={focusInput}
+      >
         <Textarea
-          ref={ref}
+          ref={internalRef}
           value={text}
           onChange={(e) => handleTextChange(e.target.value)}
           onKeyDown={(e) => {
@@ -199,18 +208,18 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
           }}
           placeholder={getPlaceholder()}
           className={cn(
-            "flex-1 bg-background text-base min-h-11 max-h-48",
+            "flex-1 bg-transparent text-base min-h-8 max-h-48 border-none focus-visible:ring-0 focus-visible:ring-offset-0 p-1",
             isBlocked ? "pl-2 text-destructive placeholder:text-destructive/80" : ""
           )}
           disabled={isBlocked}
           rows={1}
         />
         <div className="flex items-end gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9 mb-0.5">
-            {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
+          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-8 w-8 mb-0.5">
+            {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
           </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9 mb-0.5">
-            <Send className="h-5 w-5" />
+          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8 mb-0.5">
+            <Send className="h-4 w-4" />
           </Button>
         </div>
       </div>
