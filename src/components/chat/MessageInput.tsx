@@ -19,13 +19,16 @@ interface MessageInputProps {
 }
 
 const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
-    ({ chatId, replyTo, onCancelReply }, ref) => {
+    ({ chatId, replyTo, onCancelReply }, fowardedRef) => {
   const [text, setText] = useState('');
   const [isSendingMedia, setIsSendingMedia] = useState(false);
   const { user } = useUser();
   const { toast } = useToast();
   const typingRef = useRef<any>(null);
   const typingStatusRef = user ? dbRef(db, `typing/${chatId || 'public'}/${user.username}`) : null;
+  const internalRef = useRef<HTMLTextAreaElement>(null);
+
+  const ref = (fowardedRef || internalRef) as React.RefObject<HTMLTextAreaElement>;
 
   const isBlocked = user?.isBlocked && user.blockExpires && user.blockExpires > Date.now();
 
@@ -161,6 +164,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
   const toggleMediaMode = () => {
     setIsSendingMedia(!isSendingMedia);
     setText('');
+    ref.current?.focus();
   }
   
   const getPlaceholder = () => {
@@ -169,6 +173,10 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
     if (isSendingMedia) return "Enter your media URL...";
     return "Type your message...";
   }
+
+  const focusInput = () => {
+    ref.current?.focus();
+  };
 
   return (
     <div className="px-3">
@@ -186,7 +194,13 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
             </Button>
         </div>
       )}
-      <div className="flex items-end gap-2">
+      <div 
+        className="flex items-end gap-2 bg-background p-2 rounded-xl border"
+        onClick={focusInput}
+        >
+        <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9 flex-shrink-0">
+            {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
+        </Button>
         <Textarea
           ref={ref}
           value={text}
@@ -199,20 +213,15 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
           }}
           placeholder={getPlaceholder()}
           className={cn(
-            "flex-1 bg-background text-base min-h-11 max-h-48",
+            "flex-1 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 text-base min-h-0 p-0",
             isBlocked ? "pl-2 text-destructive placeholder:text-destructive/80" : ""
           )}
           disabled={isBlocked}
           rows={1}
         />
-        <div className="flex items-end gap-1">
-          <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9 mb-0.5">
-            {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
-          </Button>
-          <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9 mb-0.5">
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
+        <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9 flex-shrink-0">
+          <Send className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   );
