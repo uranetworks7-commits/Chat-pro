@@ -133,7 +133,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
 
   const isSender = user?.username === message.senderId;
-  const senderRole = message.role || 'user';
+  const senderRole = senderData?.role || message.role || 'user';
   const canModerate = user?.role === 'moderator' || user?.role === 'developer';
   const hasMedia = message.imageUrl && isValidHttpUrl(message.imageUrl);
   const showLikeButton = message.text && message.text.includes('#');
@@ -162,16 +162,22 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   }, [message.text]);
 
   useEffect(() => {
-    if (canModerate && !isSender) {
-        const userRef = ref(db, `users/${message.senderId}`);
-        const listener = onValue(userRef, (snapshot) => {
-            if (snapshot.exists()) {
-                setSenderData({ ...snapshot.val(), username: message.senderId });
-            }
-        });
-        return () => off(userRef, 'value', listener);
-    }
-  }, [canModerate, isSender, message.senderId]);
+    const userRef = ref(db, `users/${message.senderId}`);
+    const listener = onValue(userRef, (snapshot) => {
+        if (snapshot.exists()) {
+            setSenderData({ ...snapshot.val(), username: message.senderId });
+        } else {
+            // Fallback to message data if user is not in DB (e.g. deleted account)
+            setSenderData({
+                username: message.senderId,
+                customName: message.senderName,
+                profileImageUrl: message.senderProfileUrl,
+                role: message.role,
+            });
+        }
+    });
+    return () => off(userRef, 'value', listener);
+  }, [message.senderId, message.senderName, message.senderProfileUrl, message.role]);
 
   const getChatId = () => {
     if (!isPrivateChat || !user) return 'public';
@@ -242,7 +248,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             <div className="flex justify-center items-center my-2">
                 <div className="flex items-center gap-2 text-center text-sm text-purple-400 font-semibold px-4 py-1 bg-purple-800/80 border border-purple-600 rounded-full">
                     <RoleIcon role="system" className="h-4 w-4" />
-                    <span className="font-bold">{message.senderName}</span>
+                    <span className="font-bold">{senderData?.customName || message.senderName}</span>
                     <ArrowRight className="h-3 w-3" />
                     <span>{message.text}</span>
                 </div>
@@ -290,7 +296,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
     <Confetti fire={fireConfetti} />
     <div className={cn('flex items-start gap-3 p-2 my-1', isSender ? 'flex-row-reverse' : 'flex-row')}>
       <Avatar className="h-8 w-8 border-2 border-muted">
-        <AvatarImage src={message.senderProfileUrl} />
+        <AvatarImage src={senderData?.profileImageUrl || message.senderProfileUrl} />
         <AvatarFallback>
           <RoleIcon role={senderRole} />
         </AvatarFallback>
@@ -299,7 +305,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
       <div className={cn("flex flex-col w-fit max-w-md", isSender ? 'items-end' : 'items-start')}>
         <div className={cn("flex items-center gap-1.5", isSender ? 'flex-row-reverse' : 'flex-row')}>
             <span className={cn('text-sm font-semibold', roleStyles[senderRole])}>
-                {message.senderName}
+                {senderData?.customName || message.senderName}
             </span>
             {senderRole !== 'user' && <RoleIcon role={senderRole} className="h-3 w-3" />}
              <div className="self-start">
@@ -385,3 +391,4 @@ export default memo(MessageComponent);
     
 
     
+
