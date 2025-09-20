@@ -66,28 +66,10 @@ const EMOJI_REACTIONS = ['❤️', '👍', '😂', '😢', '😠'];
 function parseAndRenderMessage(text: string) {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
-    const mediaExtensions = {
-      image: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
-      video: ['mp4', 'webm', 'mov'],
-      audio: ['mp3', 'wav', 'ogg', 'm4a'],
-    };
   
     return parts.map((part, index) => {
       if (part.match(urlRegex)) {
-        try {
-            const url = new URL(part);
-            const extension = url.pathname.split('.').pop()?.toLowerCase();
-            
-            if (mediaExtensions.image.includes(extension!) || 
-                mediaExtensions.video.includes(extension!) || 
-                mediaExtensions.audio.includes(extension!)) {
-                // These are handled by MediaContent, so don't render anything here
-                return null;
-            }
-        } catch (e) {
-            // Not a valid URL, treat as text
-        }
-        // General URLs are now handled outside this function
+        // URLs are handled outside this function now
         return null;
       }
       return <p key={index} className="whitespace-pre-wrap break-words">{part}</p>;
@@ -120,17 +102,19 @@ const MediaContent = ({ url }: { url: string }) => {
         return (
             <Dialog>
                 <DialogTrigger asChild>
-                    <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover cursor-pointer" width={300} height={300} />
+                    <div className="relative mt-2 max-w-xs cursor-pointer">
+                        <Image src={url} alt="chat attachment" className="rounded-lg object-contain" width={500} height={500} unoptimized />
+                    </div>
                 </DialogTrigger>
-                <DialogContent className="p-0 border-0 max-w-4xl bg-transparent">
+                <DialogContent className="p-0 border-0 max-w-[90vw] h-auto bg-transparent">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={url} alt="chat attachment" className="w-full h-full object-contain" />
+                    <img src={url} alt="chat attachment" className="max-h-[90vh] w-auto h-auto object-contain mx-auto" />
                 </DialogContent>
             </Dialog>
         );
     }
     if (mediaType === 'video') {
-        return <video src={url} controls className="mt-2 rounded-lg w-[250px] aspect-square object-cover" />;
+        return <video src={url} controls className="mt-2 rounded-lg max-w-xs" />;
     }
     if (mediaType === 'audio') {
         return <AudioPlayer url={url} />;
@@ -333,18 +317,18 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                 <div 
                     {...longPressProps}
                     className={cn(
-                        'rounded-lg p-3 relative shadow-md mt-1 flex flex-col', 
+                        'rounded-lg relative shadow-md mt-1 flex flex-col', 
                         isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
                     )}
                 >
                     <ReplyPreview replyTo={message.replyTo} />
-                    <div className={cn("text-base break-words", message.replyTo ? 'pt-2' : '')}>
+                    <div className={cn("text-base break-words p-3", message.replyTo ? 'pt-2' : '')}>
                         {message.text && parseAndRenderMessage(message.text)}
                     </div>
                     
-                    {hasMedia && <div className=""><MediaContent url={message.imageUrl!} /></div>}
+                    {hasMedia && <div className="p-1 pt-0"><MediaContent url={message.imageUrl!} /></div>}
 
-                    <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                    <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end px-3 pb-2", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
                         {format(new Date(message.timestamp), 'p')}
                     </div>
                 </div>
