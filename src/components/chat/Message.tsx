@@ -3,7 +3,7 @@
 
 import { memo, useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Star, ArrowRight, CornerUpLeft } from 'lucide-react';
+import { MoreHorizontal, Flag, UserPlus, Trash2, ShieldOff, Download, Play, Link as LinkIcon, ShieldCheck, Star, ArrowRight, CornerUpLeft, Smile } from 'lucide-react';
 import { useUser } from '@/context/UserContext';
 import Image from 'next/image';
 import {
@@ -12,12 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover"
 import {
     Dialog,
     DialogContent,
@@ -32,7 +31,6 @@ import { db } from '@/lib/firebase';
 import { ref, onValue, off, get, update, set, remove, increment } from 'firebase/database';
 import AudioPlayer from './AudioPlayer';
 import Confetti from './Confetti';
-import { useLongPress } from 'react-use';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -128,7 +126,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const { toast } = useToast();
   const [senderData, setSenderData] = useState<UserData | null>(null);
   const [fireConfetti, setFireConfetti] = useState(false);
-  const [showReactionPopup, setShowReactionPopup] = useState(false);
   const [detectedUrl, setDetectedUrl] = useState<string | null>(null);
 
   const isSender = user?.username === message.senderId;
@@ -137,14 +134,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
   const hasMedia = message.imageUrl && isValidHttpUrl(message.imageUrl);
   const showLikeButton = message.text && message.text.includes('#');
   const hasLiked = user ? message.likedBy && message.likedBy[user.username] : false;
-
-  const longPressProps = useLongPress(() => {
-    setShowReactionPopup(true);
-  }, {
-    threshold: 400,
-    captureEvent: true,
-    cancelOnMovement: true,
-  });
 
   useEffect(() => {
     if (message.text) {
@@ -236,7 +225,6 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
         const newReactors = [...existingReactors, user.username];
         await set(reactionRef, newReactors);
     }
-    setShowReactionPopup(false);
   }
 
   const isSenderBlocked = senderData?.isBlocked && senderData.blockExpires && senderData.blockExpires > Date.now();
@@ -263,16 +251,37 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align={isSender ? "end" : "start"}>
-        {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
-        {!isSender && <DropdownMenuItem onClick={() => onReply(message)}><CornerUpLeft className="mr-2 h-4 w-4" /><span>Reply</span></DropdownMenuItem>}
-        {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
-        {(canModerate || isSender) && <DropdownMenuSeparator />}
-        {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
-        {canModerate && !isSender && !isPrivateChat && (
-            isSenderBlocked 
-                ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
-                : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block</span></DropdownMenuItem>
-        )}
+            {!isSender && (
+                <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                        <Smile className="mr-2 h-4 w-4" />
+                        <span>React</span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuPortal>
+                        <DropdownMenuSubContent>
+                            <div className="flex gap-1 p-1">
+                                {EMOJI_REACTIONS.map(emoji => (
+                                    <DropdownMenuItem key={emoji} className="p-0">
+                                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
+                                            {emoji}
+                                        </Button>
+                                    </DropdownMenuItem>
+                                ))}
+                            </div>
+                        </DropdownMenuSubContent>
+                    </DropdownMenuPortal>
+                </DropdownMenuSub>
+            )}
+            {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onSendFriendRequest(message.senderId)}><UserPlus className="mr-2 h-4 w-4" /><span>Send Friend Request</span></DropdownMenuItem>}
+            {!isSender && <DropdownMenuItem onClick={() => onReply(message)}><CornerUpLeft className="mr-2 h-4 w-4" /><span>Reply</span></DropdownMenuItem>}
+            {!isSender && !isPrivateChat && <DropdownMenuItem onClick={() => onReport(message)}><Flag className="mr-2 h-4 w-4" /><span>Report</span></DropdownMenuItem>}
+            {(canModerate || isSender) && <DropdownMenuSeparator />}
+            {(canModerate || isSender) && <DropdownMenuItem className="text-destructive" onClick={() => onDelete(message.id)}><Trash2 className="mr-2 h-4 w-4" /><span>Delete</span></DropdownMenuItem>}
+            {canModerate && !isSender && !isPrivateChat && (
+                isSenderBlocked 
+                    ? <DropdownMenuItem className="text-green-500" onClick={() => onUnblock(message.senderId)}><ShieldCheck className="mr-2 h-4 w-4" /><span>Unblock User</span></DropdownMenuItem>
+                    : <DropdownMenuItem className="text-destructive" onClick={() => onBlock(message.senderId)}><ShieldOff className="mr-2 h-4 w-4" /><span>Block</span></DropdownMenuItem>
+            )}
         </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -312,37 +321,23 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
             </div>
         </div>
         
-        <Popover open={showReactionPopup} onOpenChange={setShowReactionPopup}>
-            <PopoverTrigger asChild>
-                <div 
-                    {...longPressProps}
-                    className={cn(
-                        'rounded-lg relative shadow-md mt-1 flex flex-col', 
-                        isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
-                    )}
-                >
-                    <ReplyPreview replyTo={message.replyTo} />
-                    <div className={cn("text-base break-words p-3", message.replyTo ? 'pt-2' : '')}>
-                        {message.text && parseAndRenderMessage(message.text)}
-                    </div>
-                    
-                    {hasMedia && <div className="p-1 pt-0"><MediaContent url={message.imageUrl!} /></div>}
+        <div 
+            className={cn(
+                'rounded-lg relative shadow-md mt-1 flex flex-col', 
+                isSender ? 'bg-primary text-primary-foreground rounded-br-none' : `${messageBgStyles[senderRole]} rounded-bl-none`,
+            )}
+        >
+            <ReplyPreview replyTo={message.replyTo} />
+            <div className={cn("text-base break-words p-3", message.replyTo ? 'pt-2' : '')}>
+                {message.text && parseAndRenderMessage(message.text)}
+            </div>
+            
+            {hasMedia && <div className="p-1 pt-0"><MediaContent url={message.imageUrl!} /></div>}
 
-                    <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end px-3 pb-2", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
-                        {format(new Date(message.timestamp), 'p')}
-                    </div>
-                </div>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-1 rounded-full">
-                <div className="flex gap-1">
-                    {EMOJI_REACTIONS.map(emoji => (
-                        <Button key={emoji} variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
-                            {emoji}
-                        </Button>
-                    ))}
-                </div>
-            </PopoverContent>
-        </Popover>
+            <div className={cn("text-[0.6rem] text-muted-foreground mt-1 self-end px-3 pb-2", isSender ? 'text-primary-foreground/70' : 'text-muted-foreground')}>
+                {format(new Date(message.timestamp), 'p')}
+            </div>
+        </div>
 
         {detectedUrl && (
             <Button asChild variant="secondary" size="sm" className="mt-1.5 h-auto py-2 text-xs">
