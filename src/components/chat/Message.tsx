@@ -259,7 +259,7 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent>
-                            <div className="flex gap-1 p-1">
+                            <div className="flex flex-col gap-1 p-1">
                                 {EMOJI_REACTIONS.map(emoji => (
                                     <DropdownMenuItem key={emoji} className="p-0">
                                         <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-lg" onClick={() => handleReaction(emoji)}>
