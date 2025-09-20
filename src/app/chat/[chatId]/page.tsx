@@ -133,7 +133,7 @@ export default function PrivateChatPage() {
             >
                 <MessageList chatId={chatId} isPrivateChat={true} otherUserName={otherUser?.customName} onReply={handleReply} />
             </div>
-            <div className="mb-6">
+            <div>
                 <TypingIndicator chatId={chatId} />
                 <MessageInput ref={inputRef} chatId={chatId} replyTo={replyTo} onCancelReply={cancelReply} />
             </div>

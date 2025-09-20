@@ -179,7 +179,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
   };
 
   return (
-    <div className="px-2 pb-2 pt-1">
+    <div className="px-2 pb-2">
       {replyTo && (
         <div className="flex items-center justify-between p-2 rounded-t-md bg-secondary text-sm mb-1">
             <div className="flex items-center gap-2 overflow-hidden">
@@ -195,10 +195,10 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
         </div>
       )}
       <div 
-        className="flex items-end gap-2 bg-background p-1.5 rounded-lg border"
+        className="flex items-end gap-1.5 bg-background p-1 rounded-lg border"
         onClick={focusInput}
         >
-        <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-8 w-8 flex-shrink-0">
+        <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-7 w-7 flex-shrink-0">
             {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
         </Button>
         <Textarea
@@ -219,7 +219,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={isBlocked}
           rows={1}
         />
-        <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8 flex-shrink-0">
+        <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-7 w-7 flex-shrink-0">
           <Send className="h-4 w-4" />
         </Button>
       </div>

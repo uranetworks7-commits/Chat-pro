@@ -39,7 +39,7 @@ export default function ChatInterface() {
       >
         <MessageList isPrivateChat={false} onReply={handleReply} />
       </div>
-      <div className="mb-6">
+      <div>
         <TypingIndicator />
         <MessageInput ref={inputRef} replyTo={replyTo} onCancelReply={cancelReply} />
       </div>
