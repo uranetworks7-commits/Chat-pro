@@ -18,6 +18,11 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover"
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { RoleIcon } from './Icons';
@@ -112,7 +117,17 @@ const MediaContent = ({ url }: { url: string }) => {
     const mediaType = getMediaType(url);
 
     if (mediaType === 'image') {
-        return <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover" width={300} height={300} />;
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Image src={url} alt="chat attachment" className="mt-2 rounded-lg aspect-square object-cover cursor-pointer" width={300} height={300} />
+                </DialogTrigger>
+                <DialogContent className="p-0 border-0 max-w-4xl bg-transparent">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="chat attachment" className="w-full h-full object-contain" />
+                </DialogContent>
+            </Dialog>
+        );
     }
     if (mediaType === 'video') {
         return <video src={url} controls className="mt-2 rounded-lg w-[250px] aspect-square object-cover" />;
@@ -389,6 +404,3 @@ const MessageComponent = ({ message, onReport, onDelete, onBlock, onUnblock, onS
 export default memo(MessageComponent);
 
     
-
-    
-
