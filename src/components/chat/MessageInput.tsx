@@ -179,7 +179,7 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
   };
 
   return (
-    <div className="px-3">
+    <div className="px-2 pb-2 pt-1">
       {replyTo && (
         <div className="flex items-center justify-between p-2 rounded-t-md bg-secondary text-sm mb-1">
             <div className="flex items-center gap-2 overflow-hidden">
@@ -195,11 +195,11 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
         </div>
       )}
       <div 
-        className="flex items-end gap-2 bg-background p-2 rounded-xl border"
+        className="flex items-end gap-2 bg-background p-1.5 rounded-lg border"
         onClick={focusInput}
         >
-        <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-9 w-9 flex-shrink-0">
-            {isSendingMedia ? <X className="h-5 w-5" /> : <Paperclip className="h-5 w-5" />}
+        <Button variant="ghost" size="icon" onClick={toggleMediaMode} disabled={isBlocked} className="h-8 w-8 flex-shrink-0">
+            {isSendingMedia ? <X className="h-4 w-4" /> : <Paperclip className="h-4 w-4" />}
         </Button>
         <Textarea
           ref={ref}
@@ -219,8 +219,8 @@ const MessageInput = React.forwardRef<HTMLTextAreaElement, MessageInputProps>(
           disabled={isBlocked}
           rows={1}
         />
-        <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-9 w-9 flex-shrink-0">
-          <Send className="h-5 w-5" />
+        <Button size="icon" onClick={handleSendMessage} disabled={!text.trim() || isBlocked} className="h-8 w-8 flex-shrink-0">
+          <Send className="h-4 w-4" />
         </Button>
       </div>
     </div>
